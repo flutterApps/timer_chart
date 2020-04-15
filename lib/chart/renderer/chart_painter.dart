@@ -1,24 +1,37 @@
 import 'package:flutter/material.dart';
-import 'package:flutterapp/chart/base_chart_painter.dart';
-import 'package:flutterapp/chart/period_entity.dart';
+
+import '../entity/period_entity.dart';
+import '../utils/number_util.dart';
+
+import 'base_chart_painter.dart';
+import 'base_chart_renderer.dart';
+import 'main_renderer.dart';
 
 class ChartPainter extends BaseChartPainter {
   static get minScrollX => BaseChartPainter.minScrollX;
   static get maxScrollX => BaseChartPainter.maxScrollX;
   static get currIndex => BaseChartPainter.currIndex;
+  BaseChartRenderer mMainRenderer;
   List<Color> bgColor;
+
+  int fixedLength;
+  List<int> maDayList;
 
   ChartPainter({
     datas,
     scrollX = 0.0,
+    isLongPass = false,
     rightWidth = 60.0,
     bottomHeight = 30.0,
     leftRatio = 0.1,
     initIndex = 0,
     this.bgColor,
+    this.fixedLength,
+    this.maDayList= const [5, 10, 20],
   }) : super(
           datas: datas,
           scrollX: scrollX,
+          isLongPress: isLongPass,
           rightWidth: rightWidth,
           bottomHeight: bottomHeight,
           leftRatio: leftRatio,
@@ -26,8 +39,21 @@ class ChartPainter extends BaseChartPainter {
         );
 
   @override
-  void drawBg(Canvas canvas, Size size) {
+  void initChartRenderer() {
+    if (fixedLength == null) {
+      if (datas == null || datas.isEmpty) {
+        fixedLength = 2;
+      } else {
+        var t = datas[0];
+        fixedLength = 2;
+      }
+    }
+    mMainRenderer ??= MainRenderer(
+        mMainRect, mMainMaxValue, mMainMinValue, mTopPadding, isLine, fixedLength, maDayList);
+  }
 
+  @override
+  void drawBg(Canvas canvas, Size size) {
     print('---------------------drawBg-------------------');
 
     Paint mBgPaint = Paint();
@@ -43,20 +69,20 @@ class ChartPainter extends BaseChartPainter {
 
   @override
   void drawChart(Canvas canvas, Size size) {
-    Paint selectPointPaint = Paint()
-      ..isAntiAlias = true
-      ..strokeWidth = 0.5
-      ..color = Colors.black;
+    canvas.save();
 
-    Path path = new Path();
-    path.moveTo(scrollX + 0, 0);
-    path.lineTo(scrollX + 20, 20);
-    path.lineTo(scrollX + 30, 30);
-    path.lineTo(scrollX + 80, 80);
-    path.lineTo(scrollX + 100, 150);
-    path.close();
+    for (int i = mStartIndex; datas != null && i <= mStopIndex; i++) {
+      KLineEntity curPoint = datas[i];
+      if (curPoint == null) continue;
+      KLineEntity lastPoint = i == 0 ? curPoint : datas[i - 1];
+      double curX = getX(i);
+      double lastX = i == 0 ? curX : getX(i - 1);
 
-    canvas.drawPath(path, selectPointPaint);
+      mMainRenderer?.drawChart(lastPoint, curPoint, lastX, curX, size, canvas);
+    }
+
+
+    canvas.restore();
   }
 
   @override
@@ -66,16 +92,11 @@ class ChartPainter extends BaseChartPainter {
 
   @override
   void drawGrid(canvas) {
-    // TODO: implement drawGrid
+    mMainRenderer?.drawGrid(canvas, mGridRows, mGridColumns);
   }
 
   @override
   void drawRightText(canvas) {
     // TODO: implement drawRightText
-  }
-
-  @override
-  void initChartRenderer() {
-    // TODO: implement initChartRenderer
   }
 }

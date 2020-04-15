@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutterapp/chart/period_entity.dart';
+import 'package:flutterapp/chart/entity/period_entity.dart';
+
+
+import '../utils/date_format_util.dart';
+import '../chart_style.dart';
 
 abstract class BaseChartPainter extends CustomPainter {
   static double minScrollX = 0.0;
@@ -11,10 +15,33 @@ abstract class BaseChartPainter extends CustomPainter {
   double bottomHeight;
   double leftRatio;
   int initIndex;
+  bool isLongPress = false;
+  bool isLine = true;
+
+
+  //3块区域大小与位置
+  Rect mMainRect, mVolRect, mSecondaryRect;
+  double mDisplayHeight, mWidth;
+  double mTopPadding = 30.0, mBottomPadding = 20.0, mChildPadding = 12.0;
+  final int mGridRows = 4, mGridColumns = 4;
+  int mStartIndex = 0, mStopIndex = 0;
+  double mMainMaxValue = double.minPositive, mMainMinValue = double.maxFinite;
+  double mVolMaxValue = double.minPositive, mVolMinValue = double.maxFinite;
+  double mSecondaryMaxValue = double.minPositive,
+      mSecondaryMinValue = double.maxFinite;
+  double mTranslateX = double.minPositive;
+  int mMainMaxIndex = 0, mMainMinIndex = 0;
+  double mMainHighMaxValue = double.minPositive,
+      mMainLowMinValue = double.maxFinite;
+  int mItemCount = 0;
+  double mDataLen = 0.0; //数据占屏幕总长度
+
+  List<String> mFormats = [yyyy, '-', mm, '-', dd, ' ', HH, ':', nn]; //格式化时间
 
   BaseChartPainter({
     this.datas,
     this.scrollX,
+    this.isLongPress,
     this.rightWidth,
     this.bottomHeight,
     this.leftRatio,
@@ -33,9 +60,12 @@ abstract class BaseChartPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     scrollWidth = (size.width - rightWidth) / (1 + leftRatio);
     leftWidth = (size.width - rightWidth) - scrollWidth;
+    mDisplayHeight = size.height - mTopPadding - mBottomPadding;
+    mWidth = size.width;
 
+    initRect(size);
     calculateValue();
-    //initChartRenderer();
+    initChartRenderer();
 
     canvas.save();
     drawBg(canvas, size);
@@ -64,6 +94,15 @@ abstract class BaseChartPainter extends CustomPainter {
 
   //画时间
   void drawDate(Canvas canvas, Size size);
+
+  void initRect(Size size) {
+    double mainHeight = mDisplayHeight * 0.6;
+
+    mMainRect = Rect.fromLTRB(0, mTopPadding, mWidth, mTopPadding + mainHeight);
+
+
+  }
+
 
   calculateValue() {
     if (datas == null || datas.isEmpty) return;
@@ -111,7 +150,7 @@ abstract class BaseChartPainter extends CustomPainter {
     middleTss = _middleTss;
     rightTss = _rightTss;
 
-    print('currIndex---$currIndex-------${leftTss.length}-------${middleTss.length}---------');
+    print('currIndex---$currIndex-------${leftTss?.length}-------${middleTss?.length}---------');
 
     print(leftTss);
     print(middleTss);
