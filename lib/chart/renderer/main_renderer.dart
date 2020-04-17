@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'base_chart_renderer.dart';
 import '../entity/candle_entity.dart';
-import '../entity/period_entity.dart';
+import '../entity/ts_entity.dart';
 
 class MainRenderer extends BaseChartRenderer<TsEntity> {
   double mCandleWidth = ChartStyle.candleWidth;
@@ -35,42 +35,19 @@ class MainRenderer extends BaseChartRenderer<TsEntity> {
   }
 
   @override
-  void drawText(Canvas canvas, CandleEntity data, double x) {
+  void drawText(Canvas canvas, TsEntity data, double x) {
     if (isLine == true) return;
-    TextSpan span;
 
-      span = TextSpan(
-        children: _createMATextSpan(data),
-      );
-
-    if (span == null) return;
-    TextPainter tp = TextPainter(text: span, textDirection: TextDirection.ltr);
-    tp.layout();
-    tp.paint(canvas, Offset(x, chartRect.top - topPadding));
   }
 
-  List<InlineSpan> _createMATextSpan(CandleEntity data) {
-    List<InlineSpan> result = [];
-    for (int i = 0; i < data.maValueList.length; i++) {
-      if (data.maValueList[i] != 0) {
-        var item = TextSpan(
-            text: "MA${maDayList[i]}:${format(data.maValueList[i])}    ",
-            style: getTextStyle(ChartColors.getMAColor(i)));
-        result.add(item);
-      }
-    }
-    return result;
-  }
+
 
   @override
-  void drawChart(CandleEntity lastPoint, CandleEntity curPoint, double lastX,
+  void drawChart(TsEntity lastPoint, TsEntity curPoint, double lastX,
       double curX, Size size, Canvas canvas) {
-    if (isLine != true) {
-      drawCandle(curPoint, canvas, curX);
-    }
-    if (isLine == true) {
-      drawPolyline(lastPoint.close, curPoint.close, canvas, lastX, curX);
-    }
+
+      drawPolyline(lastPoint.value, curPoint.value, canvas, lastX, curX);
+  
   }
 
   Shader mLineFillShader;
@@ -157,11 +134,11 @@ class MainRenderer extends BaseChartRenderer<TsEntity> {
     }
   }
 
-  void drawCandle(CandleEntity curPoint, Canvas canvas, double curX) {
-    var high = getY(curPoint.high);
-    var low = getY(curPoint.low);
-    var open = getY(curPoint.open);
-    var close = getY(curPoint.close);
+  void drawCandle(TsEntity curPoint, Canvas canvas, double curX) {
+    var high = getY(curPoint.value);
+    var low = getY(curPoint.value);
+    var open = getY(curPoint.value);
+    var close = getY(curPoint.value);
     double r = mCandleWidth / 2;
     double lineR = mCandleLineWidth / 2;
     if (open > close) {

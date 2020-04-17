@@ -1,102 +1,106 @@
 import 'package:flutter/material.dart';
-
-import '../entity/period_entity.dart';
-import '../utils/number_util.dart';
+import 'package:flutterapp/chart/entity/period_entity.dart';
+import 'package:flutterapp/chart/entity/ts_entity.dart';
+import 'package:flutterapp/chart/utils/number_util.dart';
 
 import 'base_chart_painter.dart';
-import 'base_chart_renderer.dart';
-import 'main_renderer.dart';
 
 class ChartPainter extends BaseChartPainter {
-  static get minScrollX => BaseChartPainter.minScrollX;
-  static get maxScrollX => BaseChartPainter.maxScrollX;
-  static get currIndex => BaseChartPainter.currIndex;
-  BaseChartRenderer mMainRenderer;
+  static double minScrollX = 0.0;
+  static double maxScrollX = 0.0;
+  static int currIndex;
+
+  List<PeriodEntity> datas;
+  double scrollX;
+  int initIndex;
+  int startIndex;
   List<Color> bgColor;
 
-  int fixedLength;
-  List<int> maDayList;
-
   ChartPainter({
-    datas,
-    scrollX = 0.0,
-    isLongPass = false,
-    rightWidth = 60.0,
-    bottomHeight = 30.0,
-    leftRatio = 0.1,
-    initIndex = 0,
+    this.datas,
+    this.scrollX = 0.0,
+    this.initIndex,
     this.bgColor,
-    this.fixedLength,
-    this.maDayList= const [5, 10, 20],
+    rightWidth = 60.0,
+    dateHeight = 30.0,
+    offsetRatio = 0.1,
+    screenDataLen = 60,
   }) : super(
-          datas: datas,
-          scrollX: scrollX,
-          isLongPress: isLongPass,
           rightWidth: rightWidth,
-          bottomHeight: bottomHeight,
-          leftRatio: leftRatio,
-          initIndex: initIndex,
+          dateHeight: dateHeight,
+          offsetRatio: offsetRatio,
+          screenDataLen: screenDataLen,
         );
 
   @override
-  void initChartRenderer() {
-    if (fixedLength == null) {
-      if (datas == null || datas.isEmpty) {
-        fixedLength = 2;
-      } else {
-        var t = datas[0];
-        fixedLength = 2;
+  calculateData() {
+    if (datas == null || datas.isEmpty) return;
+    if (initIndex == null) {
+      initIndex = datas.length - 1;
+    }
+    if (currIndex == null) {
+      currIndex = datas.length - 1;
+    }
+
+    maxScrollX = initIndex * screenWidth;
+    minScrollX = (initIndex - (datas.length - 1)) * screenWidth;
+
+    if (scrollX > 0) {
+      //currIndex = initIndex - num;
+    } else {
+      //currIndex = initIndex + num;
+    }
+    //var maxOffset = (initIndex - currIndex + 1) * screenWidth;
+    //var minOffset = (initIndex - currIndex - 1) * screenWidth;
+
+    var realX = (initIndex - 1) * screenWidth - scrollX - offsetWidth;
+    var startLen = realX * screenDataLen ~/ screenWidth;
+    startNum = startLen % screenDataLen;
+
+    if (realX > 0) {
+      startIndex = (startLen / screenDataLen).ceil();
+      if (startNum == 0) {
+        startIndex += 1;
+      }
+    } else {
+      startIndex = (startLen / screenDataLen).floor();
+    }
+
+    if (startIndex >= 0 && startIndex < datas.length) {
+      if (startNum >= 0) {
+        oneTss = datas[startIndex].tss?.sublist(startNum);
+        print('oneTss---$startIndex---${oneTss?.length}---${oneTss.toString()}---');
       }
     }
-    mMainRenderer ??= MainRenderer(
-        mMainRect, mMainMaxValue, mMainMinValue, mTopPadding, isLine, fixedLength, maDayList);
-  }
-
-  @override
-  void drawBg(Canvas canvas, Size size) {
-    print('---------------------drawBg-------------------');
-
-    Paint mBgPaint = Paint();
-    Gradient mBgGradient = LinearGradient(
-      begin: Alignment.bottomCenter,
-      end: Alignment.topCenter,
-      colors: bgColor ?? [Color(0xFFDDDDDD), Color(0xFFEEEEEE)],
-    );
-
-    Rect dateRect = Rect.fromLTRB(0, 0, size.width, size.height - bottomHeight);
-    canvas.drawRect(dateRect, mBgPaint..shader = mBgGradient.createShader(dateRect));
-  }
-
-  @override
-  void drawChart(Canvas canvas, Size size) {
-    canvas.save();
-
-    for (int i = mStartIndex; datas != null && i <= mStopIndex; i++) {
-      KLineEntity curPoint = datas[i];
-      if (curPoint == null) continue;
-      KLineEntity lastPoint = i == 0 ? curPoint : datas[i - 1];
-      double curX = getX(i);
-      double lastX = i == 0 ? curX : getX(i - 1);
-
-      mMainRenderer?.drawChart(lastPoint, curPoint, lastX, curX, size, canvas);
+    var twoIndex = startIndex + 1;
+    if (twoIndex >= 0 && twoIndex < datas.length) {
+      if (screenDataLen * 2 - startNum <= showDataLen) {
+        twoTss = datas[twoIndex].tss;
+        print('twoTss1---$twoIndex---${twoTss?.length}---${twoTss.toString()}---');
+      } else {
+        var endNum = showDataLen - screenDataLen + startNum;
+        if (endNum > 0) {
+          twoTss = datas[twoIndex].tss.sublist(0, endNum);
+          print('twoTss2---$twoIndex---${twoTss?.length}---${twoTss.toString()}---');
+        }
+      }
+    }
+    var threeIndex = startIndex + 2;
+    if (threeIndex >= 0 && threeIndex < datas.length) {
+      if (screenDataLen * 2 - startNum < showDataLen) {
+        var endNum = showDataLen - screenDataLen * 2 + startNum;
+        if (endNum > 0) {
+          threeTss = datas[threeIndex].tss.sublist(0, endNum);
+          print('threeTss---$threeIndex---${threeTss?.length}---${threeTss.toString()}---');
+        }
+      }
     }
 
-
-    canvas.restore();
-  }
-
-  @override
-  void drawDate(Canvas canvas, Size size) {
-    // TODO: implement drawDate
-  }
-
-  @override
-  void drawGrid(canvas) {
-    mMainRenderer?.drawGrid(canvas, mGridRows, mGridColumns);
-  }
-
-  @override
-  void drawRightText(canvas) {
-    // TODO: implement drawRightText
+    print('scrollX:$scrollX----'
+        'startLen:$startLen-----'
+        'startNum:$startNum-----'
+        'offsetWidth:$offsetWidth-----'
+        'screenWidth:$screenWidth------'
+        'startIndex:$startIndex---------');
   }
 }

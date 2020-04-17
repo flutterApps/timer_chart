@@ -1,9 +1,10 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
-import 'package:flutterapp/chart/entity/period_entity.dart';
+import 'package:flutterapp/chart/entity/ts_entity.dart';
 
 import 'chart/chart_widget.dart';
+import 'chart/entity/period_entity.dart';
 
 void main() => runApp(MyApp());
 
@@ -30,7 +31,7 @@ class HomePage extends StatelessWidget {
     var list = <PeriodEntity>[];
     for (int i = 0; i < 16; i++) {
       var period = PeriodEntity();
-      startTime = startTime + i * cycleTime;
+      startTime = startTime + cycleTime;
       period.openTime = startTime;
       period.closeTime = startTime + cycleTime;
 
@@ -44,6 +45,8 @@ class HomePage extends StatelessWidget {
       period.tss = tss;
       list.add(period);
     }
+    print(list[1]);
+    print(list[2]);
     return list;
   }
 
@@ -58,7 +61,7 @@ class HomePage extends StatelessWidget {
         result = result + scopeC[Random().nextInt(scopeC.length)];
       }
     }
-    return double.parse(result);
+    return (double.parse(result)-500).abs();
   }
 
   @override
@@ -73,6 +76,7 @@ class HomePage extends StatelessWidget {
       ),
       body: Container(
         height: 300,
+        padding: EdgeInsets.all(10),
         child: ChartWidget(datas: datas),
       ),
     );

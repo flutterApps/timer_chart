@@ -36,4 +36,9 @@ class NumberUtil {
       return true;
     }
   }
+
+  static int ceil(double val){
+    return val.ceil();
+  }
+
 }

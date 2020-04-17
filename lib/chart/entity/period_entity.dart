@@ -1,17 +1,5 @@
-class TsEntity {
-  int time;
-  double value;
 
-  TsEntity({
-    this.time,
-    this.value,
-  });
-
-  @override
-  String toString() {
-    return '{time:$time,value:$value}';
-  }
-}
+import 'package:flutterapp/chart/entity/ts_entity.dart';
 
 class PeriodEntity {
   int openTime;

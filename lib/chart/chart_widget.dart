@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutterapp/chart/entity/period_entity.dart';
+import 'package:flutterapp/chart/entity/ts_entity.dart';
 
+import 'entity/period_entity.dart';
 import 'renderer/chart_painter.dart';
 
 class ChartWidget extends StatefulWidget {
@@ -51,7 +52,7 @@ class _ChartWidgetState extends State<ChartWidget> with TickerProviderStateMixin
         });
 
         print(
-            '----------------------onHorizontalDragUpdate    ${details.primaryDelta}    ${mScrollX}-----------');
+            '----------------------onHorizontalDragUpdate : ${details.primaryDelta} : $mScrollX');
       },
       onHorizontalDragEnd: (DragEndDetails details) {
         var velocity = details.velocity.pixelsPerSecond.dx;
@@ -112,6 +113,7 @@ class _ChartWidgetState extends State<ChartWidget> with TickerProviderStateMixin
   }
 
   void _onFling(double x) {
+    return;
     _controller = AnimationController(
         duration: Duration(
           milliseconds: widget.flingTime,

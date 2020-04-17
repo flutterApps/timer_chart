@@ -1,161 +1,317 @@
 import 'package:flutter/material.dart';
-import 'package:flutterapp/chart/entity/period_entity.dart';
-
-
-import '../utils/date_format_util.dart';
-import '../chart_style.dart';
+import 'package:flutterapp/chart/entity/point_entity.dart';
+import 'package:flutterapp/chart/entity/ts_entity.dart';
+import 'package:flutterapp/chart/utils/date_format_util.dart';
 
 abstract class BaseChartPainter extends CustomPainter {
-  static double minScrollX = 0.0;
-  static double maxScrollX = 0.0;
-  static int currIndex = 0;
-  List<PeriodEntity> datas;
-  double scrollX;
+  List<TsEntity> oneTss;
+  List<TsEntity> twoTss;
+  List<TsEntity> threeTss;
+  double maxValue = 0.0;
+  double minValue = 0.0;
+  double scaleY = 0.0;
+  int startNum = 0; //周期分割线
+
   double rightWidth;
-  double bottomHeight;
-  double leftRatio;
-  int initIndex;
-  bool isLongPress = false;
-  bool isLine = true;
+  double dateHeight;
+  double offsetRatio;
+  int screenDataLen; // 每屏点数量
 
+  Rect chartRect;
+  int showDataLen; // 显示点数量
+  double pointWidth; // 数据点宽度
+  double screenWidth; // 每屏滚动宽度
+  double offsetWidth; // 默认偏移宽度
 
-  //3块区域大小与位置
-  Rect mMainRect, mVolRect, mSecondaryRect;
-  double mDisplayHeight, mWidth;
-  double mTopPadding = 30.0, mBottomPadding = 20.0, mChildPadding = 12.0;
-  final int mGridRows = 4, mGridColumns = 4;
-  int mStartIndex = 0, mStopIndex = 0;
-  double mMainMaxValue = double.minPositive, mMainMinValue = double.maxFinite;
-  double mVolMaxValue = double.minPositive, mVolMinValue = double.maxFinite;
-  double mSecondaryMaxValue = double.minPositive,
-      mSecondaryMinValue = double.maxFinite;
-  double mTranslateX = double.minPositive;
-  int mMainMaxIndex = 0, mMainMinIndex = 0;
-  double mMainHighMaxValue = double.minPositive,
-      mMainLowMinValue = double.maxFinite;
-  int mItemCount = 0;
-  double mDataLen = 0.0; //数据占屏幕总长度
-
-  List<String> mFormats = [yyyy, '-', mm, '-', dd, ' ', HH, ':', nn]; //格式化时间
+  final int gridRows = 4;
+  final int gridColumns = 1;
+  final double fontSize = 12.0;
+  final Color primaryColor = Color(0xFF00A2AE);
+  final Color antiColor = Color(0xFFFF5918);
+  final List<String> dateFormats = [HH, ':', nn]; //格式化时间
+  final List<PointEntity> openPoints = [];
 
   BaseChartPainter({
-    this.datas,
-    this.scrollX,
-    this.isLongPress,
     this.rightWidth,
-    this.bottomHeight,
-    this.leftRatio,
-    this.initIndex,
-  }) : assert(leftRatio < 1 && leftRatio > 0);
-
-  double leftWidth;
-  double offsetWidth;
-  double scrollWidth; // 每屏滚动宽度
-  double mPointWidth; // 每价格点宽度
-  List<TsEntity> leftTss;
-  List<TsEntity> middleTss;
-  List<TsEntity> rightTss;
+    this.dateHeight,
+    this.offsetRatio,
+    this.screenDataLen,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
-    scrollWidth = (size.width - rightWidth) / (1 + leftRatio);
-    leftWidth = (size.width - rightWidth) - scrollWidth;
-    mDisplayHeight = size.height - mTopPadding - mBottomPadding;
-    mWidth = size.width;
+    double width = size.width - rightWidth;
+    double height = size.height - dateHeight;
+    screenWidth = width / (1 + offsetRatio);
+    offsetWidth = width - screenWidth;
+    showDataLen = (screenDataLen * (1 + offsetRatio)).toInt();
+    pointWidth = width / showDataLen;
+    chartRect = Rect.fromLTRB(0, 0, width, height);
 
-    initRect(size);
+    calculateData();
     calculateValue();
-    initChartRenderer();
 
-    canvas.save();
+    //canvas.save();
     drawBg(canvas, size);
     drawGrid(canvas);
-    if (datas != null && datas.isNotEmpty) {
-      drawChart(canvas, size);
-      drawRightText(canvas);
-      drawDate(canvas, size);
+    drawGridText(canvas);
+    if (oneTss != null && oneTss.isNotEmpty) {
+      drawChart(canvas, oneTss, 0);
     }
-    canvas.restore();
+    if (twoTss != null && twoTss.isNotEmpty) {
+      final startX = (screenDataLen - startNum) * pointWidth;
+      drawChart(canvas, twoTss, startX);
+      dragGap(canvas, startX);
+    }
+    if (threeTss != null && threeTss.isNotEmpty) {
+      final startX = (screenDataLen * 2 - startNum) * pointWidth;
+      drawChart(canvas, threeTss, startX);
+      dragGap(canvas, startX);
+    }
+
+    openPoints.forEach((point) {
+      drawPoint(canvas, point.value, point.offset);
+
+      drawDate(canvas, point);
+    });
+
+    //canvas.restore();
   }
 
-  void initChartRenderer();
+  void calculateData();
+
+  void calculateValue() {
+    List<TsEntity> tss = [];
+    if (oneTss != null) {
+      tss.addAll(oneTss);
+    }
+    if (twoTss != null) {
+      tss.addAll(twoTss);
+    }
+    if (threeTss != null) {
+      tss.addAll(threeTss);
+    }
+    tss.forEach((ts) {
+      if (maxValue == null || maxValue < ts.value) {
+        maxValue = ts.value;
+      }
+      if (minValue == null || minValue > ts.value) {
+        minValue = ts.value;
+      }
+    });
+    maxValue += 200;
+    minValue -= 100;
+    if (maxValue == minValue) {
+      maxValue *= 1.5;
+      minValue /= 2;
+    }
+    scaleY = chartRect.height / (maxValue - minValue);
+  }
 
   //画背景
-  void drawBg(Canvas canvas, Size size);
+  void drawBg(Canvas canvas, Size size) {}
 
   //画网格
-  void drawGrid(canvas);
+  void drawGrid(Canvas canvas) {
+    Paint gridPaint = Paint()
+      ..isAntiAlias = true
+      ..filterQuality = FilterQuality.high
+      ..strokeWidth = 0.5
+      ..color = Color(0xff4c5c74);
+    double rowSpace = chartRect.height / gridRows;
+    for (int i = 0; i <= gridRows; i++) {
+      canvas.drawLine(
+        Offset(0, rowSpace * i),
+        Offset(chartRect.width, rowSpace * i),
+        gridPaint,
+      );
+    }
+    double columnSpace = chartRect.width / gridColumns;
+    for (int i = 0; i <= columnSpace; i++) {
+      canvas.drawLine(
+        Offset(columnSpace * i, 0),
+        Offset(columnSpace * i, chartRect.bottom),
+        gridPaint,
+      );
+    }
+  }
 
-  //画图表
-  void drawChart(Canvas canvas, Size size);
+  //画刻度值
+  void drawGridText(canvas) {
+    var painter;
+    var gridVal = (maxValue - minValue) / gridRows;
+    for (int i = 0; i <= gridRows; i++) {
+      painter = TextPainter(
+        text: TextSpan(
+          text: (maxValue - gridVal * i).toString(),
+          style: TextStyle(
+            color: Color(0xFF000000),
+            fontSize: fontSize,
+          ),
+        ),
+        textDirection: TextDirection.ltr,
+      );
+      var valueDy = chartRect.top + chartRect.height / gridRows * i;
+      if (i == gridRows) {
+        valueDy -= fontSize;
+      } else if (i > 0) {
+        valueDy -= fontSize / 2;
+      }
+      painter.layout();
+      painter.paint(canvas, Offset(chartRect.right + 5, valueDy));
+    }
+  }
 
-  //画右边值
-  void drawRightText(canvas);
+  //画周期
+  void dragGap(Canvas canvas, double startX) {
+    final Rect rect = Rect.fromLTRB(startX, chartRect.top, startX + 20, chartRect.bottom);
+    final Paint rectPaint = Paint()
+      ..strokeWidth = 1.0
+      ..color = antiColor
+      ..style = PaintingStyle.fill;
+    final LinearGradient fillGradient = LinearGradient(
+      begin: Alignment.centerLeft,
+      end: Alignment.centerRight,
+      colors: [Color(0x99666666), Color(0x00FFFFFF)],
+    );
+    final Rect fillRect = Rect.fromLTWH(rect.left, rect.top, rect.width, rect.height);
+    rectPaint.shader = fillGradient.createShader(fillRect);
+    canvas.drawRect(rect, rectPaint);
+  }
 
   //画时间
-  void drawDate(Canvas canvas, Size size);
+  void drawDate(Canvas canvas, PointEntity point) {
+    (screenDataLen * 2 - startNum) * pointWidth;
 
-  void initRect(Size size) {
-    double mainHeight = mDisplayHeight * 0.6;
-
-    mMainRect = Rect.fromLTRB(0, mTopPadding, mWidth, mTopPadding + mainHeight);
-
-
+    final textPainter = TextPainter(
+      text: TextSpan(
+        text: point.time.toString(),
+        style: TextStyle(
+          color: Colors.white,
+          fontSize: fontSize,
+        ),
+      ),
+      textDirection: TextDirection.ltr,
+    );
+    textPainter.layout();
+    textPainter.paint(canvas, Offset(point.offset.dx, point.offset.dy));
   }
 
-
-  calculateValue() {
-    if (datas == null || datas.isEmpty) return;
-    if (initIndex == 0) {
-      initIndex = currIndex = datas.length - 1;
-    }
-
-    maxScrollX = initIndex * scrollWidth;
-    minScrollX = (initIndex - (datas.length - 1)) * scrollWidth;
-
-
-    //周期数量长度
-    var periodLen = datas.last.closeTime - datas.last.openTime;
-    mPointWidth = scrollWidth / periodLen;
-
-    var num = ((scrollX + leftWidth) ~/ scrollWidth).abs();
-    offsetWidth = (scrollX + leftWidth - scrollWidth * num).abs();
-
-    if (scrollX > 0) {
-      currIndex = initIndex - num;
-    } else {
-      currIndex = initIndex + num;
-    }
-
-    var maxOffset = (initIndex-currIndex+1)*scrollWidth;
-    var minOffset = (initIndex-currIndex-1)*scrollWidth;
-
-    print('---------maxOffset:$maxOffset----------------minOffset:$minOffset---------------');
-
-    var _leftTss,_middleTss,_rightTss;
-    if (currIndex - 1 >= 0 && currIndex - 1 < datas.length) {
-      final leftIndex = (periodLen * (1 - offsetWidth / scrollWidth)).toInt();
-      if(leftIndex>0){
-        _leftTss = datas[currIndex - 1].tss.sublist(leftIndex);
+  //画折线
+  void drawChart(Canvas canvas, List<TsEntity> tss, double startX) {
+    Offset startPoint;
+    Offset endPoint;
+    final path = Path();
+    for (int i = 0; i < tss.length; i++) {
+      double x = startX + i * pointWidth;
+      double y = (maxValue - tss[i].value) * scaleY;
+      if (i == 0) {
+        startPoint = Offset(x, y);
+        path.moveTo(x, y);
+      } else {
+        path.lineTo(x, y);
+      }
+      if (i == tss.length - 1) {
+        endPoint = Offset(x, y);
+        path.lineTo(x, y);
+      }
+      if (i == 0 && tss[i].time % 60 == 0) {
+        openPoints.add(PointEntity(
+          time: tss[i].time,
+          value: tss[i].value,
+          offset: Offset(x, y),
+        ));
       }
     }
-    if (currIndex >= 0 && currIndex < datas.length && offsetWidth <= leftWidth) {
-      _middleTss = datas[currIndex].tss;
-    }
-    if (currIndex + 1 >= 0 && currIndex + 1 < datas.length) {
-      final rightIndex = (periodLen * (offsetWidth / scrollWidth)).toInt();
-      _rightTss = datas[currIndex + 1].tss.sublist(0, rightIndex);
-    }
-    leftTss = _leftTss;
-    middleTss = _middleTss;
-    rightTss = _rightTss;
+    final paint = Paint()
+      ..strokeWidth = 1.0
+      ..color = antiColor
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = true ? StrokeJoin.miter : StrokeJoin.round
+      ..style = PaintingStyle.stroke;
 
-    print('currIndex---$currIndex-------${leftTss?.length}-------${middleTss?.length}---------');
+    final fillPath = Path()..addPath(path, Offset.zero);
+    fillPath.relativeLineTo(0, 0.0);
+    fillPath.lineTo(endPoint.dx, chartRect.height);
+    fillPath.lineTo(startX, chartRect.height);
+    fillPath.lineTo(startPoint.dx, startPoint.dy);
+    fillPath.close();
 
-    print(leftTss);
-    print(middleTss);
-    print(rightTss);
+    final fillPaint = Paint()
+      ..strokeWidth = 0.0
+      ..color = antiColor
+      ..style = PaintingStyle.fill;
+
+    final fillGradient = LinearGradient(
+      begin: Alignment.topCenter,
+      end: Alignment.bottomCenter,
+      colors: [antiColor, Colors.white70],
+    );
+
+    final fillRect = Rect.fromLTWH(0.0, 0.0, tss.length * pointWidth, chartRect.height);
+    fillPaint.shader = fillGradient.createShader(fillRect);
+
+    canvas.drawPath(fillPath, fillPaint);
+    canvas.drawPath(path, paint);
+
+    final line = Paint()
+      ..color = antiColor
+      ..strokeCap = StrokeCap.round
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1;
+    Offset center = Offset(50, chartRect.height); //  坐标中心
+    double radius = 10; //  半径
+    canvas.drawCircle(center, radius, line);
   }
+
+  //画开盘点
+  void drawPoint(Canvas canvas, double value, Offset offset) {
+    Color showColor = primaryColor;
+    double w = fontSize * 6 / 1.6;
+    double h = fontSize * 1.6;
+
+    final circlePaint = Paint()
+      ..strokeWidth = 1
+      ..color = showColor;
+    canvas.drawCircle(offset, fontSize / 4 + 2, circlePaint);
+    circlePaint..color = Colors.white;
+    canvas.drawCircle(offset, fontSize / 4 + 1, circlePaint);
+    circlePaint..color = showColor;
+    canvas.drawCircle(offset, fontSize / 4, circlePaint);
+
+    /*
+      final linePaint = Paint()
+        ..color = showColor;
+      canvas.drawLine(point, Offset(chartRect.width-point.dx, point.dy), linePaint);
+       */
+
+    final path = Path()..moveTo(offset.dx + fontSize / 2, offset.dy);
+    path.lineTo(offset.dx + fontSize / 2 + h / 6, offset.dy - h / 6);
+    path.lineTo(offset.dx + fontSize / 2 + h / 6, offset.dy - h / 2);
+    path.lineTo(offset.dx + fontSize / 2 + h / 6 + w, offset.dy - h / 2);
+    path.lineTo(offset.dx + fontSize / 2 + h / 6 + w, offset.dy + h / 2);
+    path.lineTo(offset.dx + fontSize / 2 + h / 6, offset.dy + h / 2);
+    path.lineTo(offset.dx + fontSize / 2 + h / 6, offset.dy + h / 6);
+    final paint = Paint()
+      ..style = PaintingStyle.fill
+      ..color = showColor;
+    canvas.drawPath(path, paint);
+
+    final textPainter = TextPainter(
+      text: TextSpan(
+        text: value.toString(),
+        style: TextStyle(
+          color: Colors.white,
+          fontSize: fontSize,
+        ),
+      ),
+      textDirection: TextDirection.ltr,
+    );
+    textPainter.layout();
+    textPainter.paint(canvas, Offset(offset.dx + h/1.5, offset.dy - h / 2.6));
+  }
+
+
 
   @override
   bool shouldRepaint(BaseChartPainter oldDelegate) {
