@@ -22,15 +22,15 @@ class ChartPainter extends CustomPainter {
   double pointWidth; // 数据点宽度
   double offsetWidth; // 默认偏移宽度
 
-  int startTime = 0;
-  int startIndex = 0;
-  List<TsEntity> oneTss;
-  List<TsEntity> twoTss;
-  List<TsEntity> threeTss;
-  double maxValue = 0.0;
-  double minValue = 0.0;
-  double scaleY = 0.0;
-  int startNum = 0; //周期分割线
+  int _startNum = 0; //周期分割线
+  int _startTime = 0;
+  int _startIndex = 0;
+  List<TsEntity> _oneTss;
+  List<TsEntity> _twoTss;
+  List<TsEntity> _threeTss;
+  double _maxValue = 0.0;
+  double _minValue = 0.0;
+  double _scaleY = 0.0;
 
   final int gridRows = 3;
   final int gridColumns = 0;
@@ -68,14 +68,14 @@ class ChartPainter extends CustomPainter {
     drawBg(canvas, size);
     drawGrid(canvas);
     drawGridText(canvas);
-    if (oneTss != null && oneTss.isNotEmpty) {
-      drawChart(canvas, oneTss, 0);
+    if (_oneTss != null && _oneTss.isNotEmpty) {
+      drawChart(canvas, _oneTss, 0);
     }
-    if (twoTss != null && twoTss.isNotEmpty) {
-      drawChart(canvas, twoTss, (screenDataLen - startNum) * pointWidth);
+    if (_twoTss != null && _twoTss.isNotEmpty) {
+      drawChart(canvas, _twoTss, (screenDataLen - _startNum) * pointWidth);
     }
-    if (threeTss != null && threeTss.isNotEmpty) {
-      drawChart(canvas, threeTss, (screenDataLen * 2 - startNum) * pointWidth);
+    if (_threeTss != null && _threeTss.isNotEmpty) {
+      drawChart(canvas, _threeTss, (screenDataLen * 2 - _startNum) * pointWidth);
     }
 
     drawGapDate(canvas);
@@ -89,7 +89,7 @@ class ChartPainter extends CustomPainter {
 
   calculateData() {
     if (datas == null || datas.isEmpty) return;
-    if (initIndex == 0) {
+    if (initIndex == null || initIndex == 0) {
       initIndex = datas.length - 1;
     }
 
@@ -98,71 +98,68 @@ class ChartPainter extends CustomPainter {
 
     var realX = (initIndex - 1) * screenWidth - scrollX - offsetWidth;
     var startLen = realX * screenDataLen ~/ screenWidth;
-    startNum = startLen % screenDataLen;
+    _startNum = startLen % screenDataLen;
 
     if (realX > 0) {
-      startIndex = (startLen / screenDataLen).ceil();
-      if (startNum == 0) {
-        startIndex += 1;
+      _startIndex = (startLen / screenDataLen).ceil();
+      if (_startNum == 0) {
+        _startIndex += 1;
       }
     } else {
-      startIndex = (startLen / screenDataLen).floor();
+      _startIndex = (startLen / screenDataLen).floor();
     }
-    startTime = datas[initIndex].openTime + (startIndex - initIndex) * screenDataLen;
+    _startTime = datas[initIndex].openTime + (_startIndex - initIndex) * screenDataLen;
 
-    if (startIndex >= 0 && startIndex < datas.length) {
-      if (startNum >= 0) {
-        oneTss = datas[startIndex].tss?.sublist(startNum);
+    if (_startIndex >= 0 && _startIndex < datas.length) {
+      if (_startNum >= 0) {
+        _oneTss = datas[_startIndex].tss?.sublist(_startNum);
       }
     }
-    var twoIndex = startIndex + 1;
+    var twoIndex = _startIndex + 1;
     if (twoIndex >= 0 && twoIndex < datas.length) {
-      if (screenDataLen * 2 - startNum <= showDataLen) {
-        twoTss = datas[twoIndex].tss;
+      if (screenDataLen * 2 - _startNum <= showDataLen) {
+        _twoTss = datas[twoIndex].tss;
       } else {
-        var endNum = showDataLen - screenDataLen + startNum;
+        var endNum = showDataLen - screenDataLen + _startNum;
         if (endNum > 0) {
-          twoTss = datas[twoIndex].tss.sublist(0, endNum);
+          _twoTss = datas[twoIndex].tss?.sublist(0, endNum);
         }
       }
     }
-    var threeIndex = startIndex + 2;
+    var threeIndex = _startIndex + 2;
     if (threeIndex >= 0 && threeIndex < datas.length) {
-      if (screenDataLen * 2 - startNum < showDataLen) {
-        var endNum = showDataLen - screenDataLen * 2 + startNum;
+      if (screenDataLen * 2 - _startNum < showDataLen) {
+        var endNum = showDataLen - screenDataLen * 2 + _startNum;
         if (endNum > 0) {
-          threeTss = datas[threeIndex].tss.sublist(0, endNum);
+          _threeTss = datas[threeIndex].tss?.sublist(0, endNum);
         }
       }
     }
   }
 
   void calculateValue() {
+    double maxValue=0;
+    double minValue=0;
     List<TsEntity> tss = [];
-    if (oneTss != null) {
-      tss.addAll(oneTss);
-    }
-    if (twoTss != null) {
-      tss.addAll(twoTss);
-    }
-    if (threeTss != null) {
-      tss.addAll(threeTss);
-    }
-    tss.forEach((ts) {
-      if (maxValue == null || maxValue < ts.value) {
-        maxValue = ts.value;
+    if (_oneTss != null) tss.addAll(_oneTss);
+    if (_twoTss != null) tss.addAll(_twoTss);
+    if (_threeTss != null) tss.addAll(_threeTss);
+    for(int i=0;i<tss.length;i++){
+      if (i == 0 || maxValue < tss[i].value) {
+        maxValue = tss[i].value;
       }
-      if (minValue == null || minValue > ts.value) {
-        minValue = ts.value;
+      if (i == 0 || minValue > tss[i].value) {
+        minValue = tss[i].value;
       }
-    });
-    maxValue += 200;
-    minValue -= 100;
-    if (maxValue == minValue) {
-      maxValue *= 1.5;
-      minValue /= 2;
     }
-    scaleY = chartRect.height / (maxValue - minValue);
+    // _maxValue = (_maxValue-_minValue)/gridRows;
+    _maxValue = maxValue + 100;
+    _minValue = minValue - 100;
+    if (_maxValue == _minValue) {
+      _maxValue *= 1.5;
+      _minValue /= 2;
+    }
+    _scaleY = chartRect.height / (_maxValue - _minValue);
   }
 
   //画背景
@@ -198,11 +195,11 @@ class ChartPainter extends CustomPainter {
   //画刻度值
   void drawGridText(canvas) {
     var painter;
-    var gridVal = (maxValue - minValue) / gridRows;
+    var gridVal = (_maxValue - _minValue) / gridRows;
     for (int i = 0; i <= gridRows; i++) {
       painter = TextPainter(
         text: TextSpan(
-          text: (maxValue - gridVal * i).toString(),
+          text: (_maxValue - gridVal * i).toString(),
           style: TextStyle(
             color: textColor,
             fontSize: fontSize,
@@ -229,7 +226,7 @@ class ChartPainter extends CustomPainter {
     final path = Path();
     for (int i = 0; i < tss.length; i++) {
       double x = startX + i * pointWidth;
-      double y = (maxValue - tss[i].value) * scaleY;
+      double y = (_maxValue - tss[i].value) * _scaleY;
       if (i == 0) {
         startPoint = Offset(x, y);
         path.moveTo(x, y);
@@ -330,12 +327,12 @@ class ChartPainter extends CustomPainter {
   //画周期|时间
   void drawGapDate(Canvas canvas) {
     for (int i = 0; i < 5; i++) {
-      var num = i * screenDataLen - startNum;
+      var num = i * screenDataLen - _startNum;
       if (num <= showDataLen) {
         if (num >= 0) {
           var startX = num * pointWidth;
           dragGap(canvas, startX);
-          drawDate(canvas, startX, startTime + i * screenDataLen);
+          drawDate(canvas, startX, _startTime + i * screenDataLen);
         }
       }
     }
@@ -383,6 +380,13 @@ class ChartPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(ChartPainter oldDelegate) {
-    return true;
+    return oldDelegate.datas != datas ||
+        oldDelegate.datas?.length != datas?.length ||
+        oldDelegate.scrollX != scrollX ||
+        oldDelegate.initIndex != initIndex ||
+        oldDelegate.screenDataLen != screenDataLen ||
+        oldDelegate.rightWidth != rightWidth ||
+        oldDelegate.dateHeight != dateHeight ||
+        oldDelegate.offsetRatio != offsetRatio;
   }
 }

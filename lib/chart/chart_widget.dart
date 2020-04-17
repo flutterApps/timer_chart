@@ -5,24 +5,13 @@ import 'chart_painter.dart';
 
 class ChartWidget extends StatefulWidget {
   final List<PeriodEntity> datas;
-  final List<String> timeFormat;
-  //当屏幕滚动到尽头会调用，真为拉到屏幕右侧尽头，假为拉到屏幕左侧尽头
   final Function(bool) onLoadMore;
-  final List<Color> bgColor;
-  final int flingTime;
-  final double flingRatio;
-  final Curve flingCurve;
   final Function(bool) isOnDrag;
 
   ChartWidget({
     Key key,
     this.datas,
-    this.timeFormat,
     this.onLoadMore,
-    this.bgColor,
-    this.flingTime = 600,
-    this.flingRatio = 0.5,
-    this.flingCurve = Curves.decelerate,
     this.isOnDrag,
   }) : super(key: key);
 
@@ -31,16 +20,21 @@ class ChartWidget extends StatefulWidget {
 }
 
 class _ChartWidgetState extends State<ChartWidget> with TickerProviderStateMixin {
+  final int flingTime = 600;
+  final double flingRatio = 0.5;
+  final Curve flingCurve = Curves.decelerate;
+
   AnimationController _controller;
   Animation<double> aniX;
   double mScrollX = 0.0;
   double mSelectX = 0.0;
   double mWidth = 0;
   bool isDrag = false;
-  bool isLongPress = false;
 
   @override
   Widget build(BuildContext context) {
+    print('------------45---------------');
+
     return GestureDetector(
       onHorizontalDragDown: (details) {
         print('---------onHorizontalDragDown-------------------------');
@@ -78,17 +72,12 @@ class _ChartWidgetState extends State<ChartWidget> with TickerProviderStateMixin
       onLongPressEnd: (details) {
         print('----------------------onLongPressEnd-------------------------');
       },
-      child: Stack(
-        children: <Widget>[
-          CustomPaint(
-            size: Size(double.infinity, double.infinity),
-            painter: ChartPainter(
-              datas: widget.datas,
-              scrollX: mScrollX,
-            ),
-          ),
-          Text('test chart'),
-        ],
+      child: CustomPaint(
+        size: Size(double.infinity, double.infinity),
+        painter: ChartPainter(
+          datas: widget.datas,
+          scrollX: mScrollX,
+        ),
       ),
     );
   }
@@ -111,27 +100,25 @@ class _ChartWidgetState extends State<ChartWidget> with TickerProviderStateMixin
   }
 
   void _onFling(double x) {
-    var tempX = x * widget.flingRatio + mScrollX;
-
+    var tempX = x * flingRatio + mScrollX;
+    var num = (tempX / ChartPainter.screenWidth).ceil();
+    var endX = num * ChartPainter.screenWidth;
     _controller = AnimationController(
         duration: Duration(
-          milliseconds: widget.flingTime,
+          milliseconds: flingTime,
         ),
         vsync: this);
     aniX = null;
     aniX = Tween<double>(
       begin: mScrollX,
-      end: x * widget.flingRatio + mScrollX,
+      end: endX,
     ).animate(CurvedAnimation(
       parent: _controller,
-      curve: widget.flingCurve,
+      curve: flingCurve,
     ));
 
-    print('---22-----------${x * widget.flingRatio + mScrollX}--------------------------');
     aniX.addListener(() {
       mScrollX = aniX.value;
-
-      print('---_onFling-----1111-----------$mScrollX---------------');
       if (mScrollX <= ChartPainter.minScrollX) {
         mScrollX = ChartPainter.minScrollX;
         if (widget.onLoadMore != null) {
@@ -145,7 +132,6 @@ class _ChartWidgetState extends State<ChartWidget> with TickerProviderStateMixin
         }
         _stopAnimation();
       }
-      print('---_onFling-----2222-----------$mScrollX-------${ChartPainter.maxScrollX}--------');
       notifyChanged();
     });
     aniX.addStatusListener((status) {

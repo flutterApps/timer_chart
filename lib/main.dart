@@ -31,14 +31,14 @@ class HomePage extends StatelessWidget {
     var list = <PeriodEntity>[];
     for (int i = 0; i < 16; i++) {
       var period = PeriodEntity();
-      startTime = startTime + cycleTime;
-      period.openTime = startTime;
-      period.closeTime = startTime + cycleTime;
+      var openTime = startTime + i*cycleTime;
+      period.openTime = openTime;
+      period.closeTime = openTime + cycleTime;
 
       var tss = <TsEntity>[];
       for (int n = 0; n <= cycleTime; n++) {
         tss.add(TsEntity(
-          time: startTime + n,
+          time: openTime + n,
           value: randomDouble(4),
         ));
       }
@@ -66,16 +66,26 @@ class HomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     final datas = getDatas();
 
-    print(datas);
-
+    print('--------------222---------');
     return Scaffold(
       appBar: AppBar(
         title: Text(title),
       ),
-      body: Container(
-        height: 300,
-        padding: EdgeInsets.all(10),
-        child: ChartWidget(datas: datas),
+      body: Column(
+        children: <Widget>[
+          Container(
+            height: 300,
+            padding: EdgeInsets.all(10),
+            child: ChartWidget(datas: datas),
+          ),
+          FlatButton(
+            color: Colors.deepOrange,
+            child: Text('add'),
+            onPressed: (){
+              datas.add(PeriodEntity(openTime: 1586427900+16*60,closeTime: 1586427900+17*60));
+            },
+          ),
+        ],
       ),
     );
   }
