@@ -45,8 +45,6 @@ class HomePage extends StatelessWidget {
       period.tss = tss;
       list.add(period);
     }
-    print(list[1]);
-    print(list[2]);
     return list;
   }
 

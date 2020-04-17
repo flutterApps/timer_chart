@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutterapp/chart/entity/ts_entity.dart';
 
 import 'entity/period_entity.dart';
-import 'renderer/chart_painter.dart';
+import 'chart_painter.dart';
 
 class ChartWidget extends StatefulWidget {
   final List<PeriodEntity> datas;
@@ -44,19 +43,18 @@ class _ChartWidgetState extends State<ChartWidget> with TickerProviderStateMixin
   Widget build(BuildContext context) {
     return GestureDetector(
       onHorizontalDragDown: (details) {
-        print('----------------------onHorizontalDragDown-------------------------');
+        print('---------onHorizontalDragDown-------------------------');
       },
       onHorizontalDragUpdate: (details) {
         setState(() {
           mScrollX = (details.primaryDelta + mScrollX);
         });
 
-        print(
-            '----------------------onHorizontalDragUpdate : ${details.primaryDelta} : $mScrollX');
+        print('---------onHorizontalDragUpdate : ${details.primaryDelta} : $mScrollX');
       },
       onHorizontalDragEnd: (DragEndDetails details) {
         var velocity = details.velocity.pixelsPerSecond.dx;
-        print('----------------------onHorizontalDragEnd    $velocity    $mScrollX------');
+        print('---------onHorizontalDragEnd    $velocity    $mScrollX------');
         _onFling(velocity);
       },
       onHorizontalDragCancel: () {
@@ -113,7 +111,8 @@ class _ChartWidgetState extends State<ChartWidget> with TickerProviderStateMixin
   }
 
   void _onFling(double x) {
-    return;
+    var tempX = x * widget.flingRatio + mScrollX;
+
     _controller = AnimationController(
         duration: Duration(
           milliseconds: widget.flingTime,
@@ -127,10 +126,12 @@ class _ChartWidgetState extends State<ChartWidget> with TickerProviderStateMixin
       parent: _controller,
       curve: widget.flingCurve,
     ));
+
+    print('---22-----------${x * widget.flingRatio + mScrollX}--------------------------');
     aniX.addListener(() {
       mScrollX = aniX.value;
 
-      print('---_onFling-----1111-----------$mScrollX------${ChartPainter.currIndex}---------');
+      print('---_onFling-----1111-----------$mScrollX---------------');
       if (mScrollX <= ChartPainter.minScrollX) {
         mScrollX = ChartPainter.minScrollX;
         if (widget.onLoadMore != null) {
