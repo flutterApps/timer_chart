@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 
 import 'entity/period_entity.dart';
@@ -5,13 +7,11 @@ import 'chart_painter.dart';
 
 class ChartWidget extends StatefulWidget {
   final List<PeriodEntity> datas;
-  final Function(bool) onLoadMore;
-  final Function(bool) isOnDrag;
+  final Function(int) isOnDrag;
 
   ChartWidget({
     Key key,
     this.datas,
-    this.onLoadMore,
     this.isOnDrag,
   }) : super(key: key);
 
@@ -33,8 +33,6 @@ class _ChartWidgetState extends State<ChartWidget> with TickerProviderStateMixin
 
   @override
   Widget build(BuildContext context) {
-    print('------------45---------------');
-
     return GestureDetector(
       onHorizontalDragDown: (details) {
         print('---------onHorizontalDragDown-------------------------');
@@ -85,24 +83,22 @@ class _ChartWidgetState extends State<ChartWidget> with TickerProviderStateMixin
   void _stopAnimation({bool needNotify = true}) {
     if (_controller != null && _controller.isAnimating) {
       _controller.stop();
-      _onDragChanged(false);
       if (needNotify) {
         notifyChanged();
       }
     }
   }
 
-  void _onDragChanged(bool isOnDrag) {
-    isDrag = isOnDrag;
+  void _onDragChanged(int index) {
     if (widget.isOnDrag != null) {
-      widget.isOnDrag(isDrag);
+      widget.isOnDrag(index);
     }
   }
 
   void _onFling(double x) {
     var tempX = x * flingRatio + mScrollX;
-    var num = (tempX / ChartPainter.screenWidth).ceil();
-    var endX = num * ChartPainter.screenWidth;
+    var index = (tempX / ChartPainter.screenWidth).ceil();
+    var endX = index * ChartPainter.screenWidth;
     _controller = AnimationController(
         duration: Duration(
           milliseconds: flingTime,
@@ -118,25 +114,21 @@ class _ChartWidgetState extends State<ChartWidget> with TickerProviderStateMixin
     ));
 
     aniX.addListener(() {
+      var minScrollX = ChartPainter.minIndex* ChartPainter.screenWidth;
+      var maxScrollX = ChartPainter.maxIndex* ChartPainter.screenWidth;
       mScrollX = aniX.value;
-      if (mScrollX <= ChartPainter.minScrollX) {
-        mScrollX = ChartPainter.minScrollX;
-        if (widget.onLoadMore != null) {
-          widget.onLoadMore(true);
-        }
+      if (mScrollX <= minScrollX) {
+        mScrollX = minScrollX;
         _stopAnimation();
-      } else if (mScrollX >= ChartPainter.maxScrollX) {
-        mScrollX = ChartPainter.maxScrollX;
-        if (widget.onLoadMore != null) {
-          widget.onLoadMore(false);
-        }
+      } else if (mScrollX >= maxScrollX) {
+        mScrollX = maxScrollX;
         _stopAnimation();
       }
       notifyChanged();
     });
     aniX.addStatusListener((status) {
       if (status == AnimationStatus.completed || status == AnimationStatus.dismissed) {
-        _onDragChanged(false);
+        _onDragChanged(1);
         notifyChanged();
       }
     });

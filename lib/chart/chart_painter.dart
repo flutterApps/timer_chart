@@ -5,8 +5,8 @@ import 'package:flutterapp/chart/entity/ts_entity.dart';
 import 'package:flutterapp/chart/utils/date_format_util.dart';
 
 class ChartPainter extends CustomPainter {
-  static double minScrollX = 0.0;
-  static double maxScrollX = 0.0;
+  static int minIndex = 0;
+  static int maxIndex = 0;
   static double screenWidth; // 每屏滚动宽度
 
   List<PeriodEntity> datas;
@@ -64,6 +64,35 @@ class ChartPainter extends CustomPainter {
     calculateData();
     calculateValue();
 
+    print('-- scrollX:$scrollX --');
+    print('-- initIndex:$initIndex --');
+    print('-- screenDataLen:$screenDataLen --');
+    print('-- rightWidth:$rightWidth --');
+    print('-- dateHeight:$dateHeight --');
+    print( '-- offsetRatio:$offsetRatio --');
+
+
+    print( '-- chartRect:${chartRect.toString()} --');
+    print('-- showDataLen:$showDataLen --');
+    print( '-- pointWidth:$pointWidth --');
+    print( '-- offsetWidth:$offsetWidth --');
+
+
+    print( '-- _startNum:$_startNum --');
+    print( '-- _startTime:$_startTime --');
+    print(  '-- _startIndex:$_startIndex --');
+    print( '-- _maxValue:$_maxValue --');
+    print( '-- _minValue:$_minValue --');
+    print( '-- _scaleY:$_scaleY --');
+    print( '-- _oneTss:${_oneTss?.length} --');
+    print( '-- _twoTss:${_twoTss?.length} --');
+    print( '-- _threeTss:${_threeTss?.length} --');
+    print( '-------');
+    print( '-------');
+    print( '-------');
+
+
+
     //canvas.save();
     drawBg(canvas, size);
     drawGrid(canvas);
@@ -77,13 +106,11 @@ class ChartPainter extends CustomPainter {
     if (_threeTss != null && _threeTss.isNotEmpty) {
       drawChart(canvas, _threeTss, (screenDataLen * 2 - _startNum) * pointWidth);
     }
-
     drawGapDate(canvas);
 
     openPoints.forEach((point) {
       drawPoint(canvas, point.value, point.offset);
     });
-
     //canvas.restore();
   }
 
@@ -93,8 +120,8 @@ class ChartPainter extends CustomPainter {
       initIndex = datas.length - 1;
     }
 
-    maxScrollX = (initIndex - 1) * screenWidth;
-    minScrollX = (initIndex - (datas.length - 1)) * screenWidth;
+    maxIndex = initIndex - 1;
+    minIndex = initIndex - (datas.length - 1);
 
     var realX = (initIndex - 1) * screenWidth - scrollX - offsetWidth;
     var startLen = realX * screenDataLen ~/ screenWidth;
@@ -136,6 +163,7 @@ class ChartPainter extends CustomPainter {
       }
     }
   }
+
 
   void calculateValue() {
     double maxValue=0;
