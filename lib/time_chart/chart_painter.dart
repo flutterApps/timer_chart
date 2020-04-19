@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutterapp/chart/entity/period_entity.dart';
-import 'package:flutterapp/chart/entity/point_entity.dart';
-import 'package:flutterapp/chart/entity/ts_entity.dart';
-import 'package:flutterapp/chart/utils/date_format_util.dart';
+import 'entity/period_entity.dart';
+import 'entity/point_entity.dart';
+import 'entity/ts_entity.dart';
+import 'utils/date_format_util.dart';
 
 class ChartPainter extends CustomPainter {
   static int minIndex = 0;
@@ -64,6 +64,7 @@ class ChartPainter extends CustomPainter {
     calculateData();
     calculateValue();
 
+    /*
     print('-- scrollX:$scrollX --');
     print('-- initIndex:$initIndex --');
     print('-- screenDataLen:$screenDataLen --');
@@ -90,7 +91,7 @@ class ChartPainter extends CustomPainter {
     print( '-------');
     print( '-------');
     print( '-------');
-
+*/
 
 
     //canvas.save();

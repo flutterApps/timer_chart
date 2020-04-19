@@ -1,11 +1,9 @@
-
-import 'package:flutterapp/chart/entity/ts_entity.dart';
+import 'ts_entity.dart';
 
 class PeriodEntity {
   int openTime;
   int closeTime;
   List<TsEntity> tss = [];
-
 
   PeriodEntity({
     this.openTime,
@@ -17,5 +15,4 @@ class PeriodEntity {
   String toString() {
     return '{openTime:$openTime,closeTime:$closeTime,tss:${tss.toString()}}';
   }
-
 }

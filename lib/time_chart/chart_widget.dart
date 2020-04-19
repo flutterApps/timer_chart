@@ -1,28 +1,27 @@
-import 'dart:math';
-
 import 'package:flutter/material.dart';
-
 import 'entity/period_entity.dart';
 import 'chart_painter.dart';
 
 class ChartWidget extends StatefulWidget {
   final List<PeriodEntity> datas;
   final Function(int) isOnDrag;
+  final int initIndex;
 
   ChartWidget({
     Key key,
     this.datas,
     this.isOnDrag,
+    this.initIndex,
   }) : super(key: key);
 
   @override
-  _ChartWidgetState createState() => _ChartWidgetState();
+  ChartWidgetState createState() => ChartWidgetState();
 }
 
-class _ChartWidgetState extends State<ChartWidget> with TickerProviderStateMixin {
-  final int flingTime = 600;
-  final double flingRatio = 0.5;
+class ChartWidgetState extends State<ChartWidget> with TickerProviderStateMixin {
   final Curve flingCurve = Curves.decelerate;
+  final double flingRatio = 0.5;
+  final int flingTime = 500;
 
   AnimationController _controller;
   Animation<double> aniX;
@@ -47,7 +46,7 @@ class _ChartWidgetState extends State<ChartWidget> with TickerProviderStateMixin
       onHorizontalDragEnd: (DragEndDetails details) {
         var velocity = details.velocity.pixelsPerSecond.dx;
         print('---------onHorizontalDragEnd    $velocity    $mScrollX------');
-        _onFling(velocity);
+        _onFling(velocity, flingTime);
       },
       onHorizontalDragCancel: () {
         print('----------------------onHorizontalDragCancel-------------------------');
@@ -75,6 +74,7 @@ class _ChartWidgetState extends State<ChartWidget> with TickerProviderStateMixin
         painter: ChartPainter(
           datas: widget.datas,
           scrollX: mScrollX,
+          initIndex: widget.initIndex,
         ),
       ),
     );
@@ -95,10 +95,24 @@ class _ChartWidgetState extends State<ChartWidget> with TickerProviderStateMixin
     }
   }
 
-  void _onFling(double x) {
+  void _onFling(double x, int flingTime) {
+    print('---------x---------------- $x ---');
+    var currIndex;
+    var offsetIndex;
     var tempX = x * flingRatio + mScrollX;
-    var index = (tempX / ChartPainter.screenWidth).ceil();
-    var endX = index * ChartPainter.screenWidth;
+    if (x > 0) {
+      offsetIndex = (tempX / ChartPainter.screenWidth).ceil();
+    } else {
+      offsetIndex = (tempX / ChartPainter.screenWidth).floor();
+    }
+    if(offsetIndex<=ChartPainter.minIndex){
+      offsetIndex = ChartPainter.minIndex;
+    }
+    if(offsetIndex>=ChartPainter.maxIndex){
+      offsetIndex = ChartPainter.maxIndex;
+    }
+    currIndex = widget.initIndex-offsetIndex;
+    var endX = offsetIndex * ChartPainter.screenWidth;
     _controller = AnimationController(
         duration: Duration(
           milliseconds: flingTime,
@@ -114,9 +128,9 @@ class _ChartWidgetState extends State<ChartWidget> with TickerProviderStateMixin
     ));
 
     aniX.addListener(() {
-      var minScrollX = ChartPainter.minIndex* ChartPainter.screenWidth;
-      var maxScrollX = ChartPainter.maxIndex* ChartPainter.screenWidth;
       mScrollX = aniX.value;
+      var minScrollX = ChartPainter.minIndex * ChartPainter.screenWidth;
+      var maxScrollX = ChartPainter.maxIndex * ChartPainter.screenWidth;
       if (mScrollX <= minScrollX) {
         mScrollX = minScrollX;
         _stopAnimation();
@@ -128,7 +142,7 @@ class _ChartWidgetState extends State<ChartWidget> with TickerProviderStateMixin
     });
     aniX.addStatusListener((status) {
       if (status == AnimationStatus.completed || status == AnimationStatus.dismissed) {
-        _onDragChanged(1);
+        _onDragChanged(currIndex);
         notifyChanged();
       }
     });

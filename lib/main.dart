@@ -1,10 +1,8 @@
 import 'dart:math';
-
 import 'package:flutter/material.dart';
-import 'package:flutterapp/chart/entity/ts_entity.dart';
-
-import 'chart/chart_widget.dart';
-import 'chart/entity/period_entity.dart';
+import 'time_chart/chart_widget.dart';
+import 'time_chart/entity/ts_entity.dart';
+import 'time_chart/entity/period_entity.dart';
 
 void main() => runApp(MyApp());
 
@@ -22,6 +20,7 @@ class MyApp extends StatelessWidget {
 }
 
 class HomePage extends StatelessWidget {
+  final GlobalKey<ChartWidgetState> _key = GlobalKey<ChartWidgetState>();
   final String title;
   HomePage({this.title});
 
@@ -31,7 +30,7 @@ class HomePage extends StatelessWidget {
     var list = <PeriodEntity>[];
     for (int i = 0; i < 16; i++) {
       var period = PeriodEntity();
-      var openTime = startTime + i*cycleTime;
+      var openTime = startTime + i * cycleTime;
       period.openTime = openTime;
       period.closeTime = openTime + cycleTime;
 
@@ -59,12 +58,13 @@ class HomePage extends StatelessWidget {
         result = result + scopeC[Random().nextInt(scopeC.length)];
       }
     }
-    return (double.parse(result)-500).abs();
+    return (double.parse(result) - 500).abs();
   }
 
   @override
   Widget build(BuildContext context) {
     final datas = getDatas();
+    final initIndex = datas.length-1;
 
     print('--------------222---------');
     return Scaffold(
@@ -76,13 +76,25 @@ class HomePage extends StatelessWidget {
           Container(
             height: 300,
             padding: EdgeInsets.all(10),
-            child: ChartWidget(datas: datas),
+            child: ChartWidget(
+              key: _key,
+              datas: datas,
+              initIndex: initIndex,
+              isOnDrag: (int index){
+                print('----------index : $index----------------');
+              },
+            ),
           ),
           FlatButton(
             color: Colors.deepOrange,
             child: Text('add'),
-            onPressed: (){
-              datas.add(PeriodEntity(openTime: 1586427900+16*60,closeTime: 1586427900+17*60));
+            onPressed: () {
+              datas.add(
+                PeriodEntity(
+                  openTime: 1586427900 + 16 * 60,
+                  closeTime: 1586427900 + 17 * 60,
+                ),
+              );
             },
           ),
         ],
