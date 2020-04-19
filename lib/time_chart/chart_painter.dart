@@ -5,8 +5,6 @@ import 'entity/ts_entity.dart';
 import 'utils/date_format_util.dart';
 
 class ChartPainter extends CustomPainter {
-  static int minIndex = 0;
-  static int maxIndex = 0;
   static double screenWidth; // 每屏滚动宽度
 
   List<PeriodEntity> datas;
@@ -22,6 +20,7 @@ class ChartPainter extends CustomPainter {
   double pointWidth; // 数据点宽度
   double offsetWidth; // 默认偏移宽度
 
+  //显示点数据参数
   int _startNum = 0; //周期分割线
   int _startTime = 0;
   int _startIndex = 0;
@@ -31,6 +30,7 @@ class ChartPainter extends CustomPainter {
   double _maxValue = 0.0;
   double _minValue = 0.0;
   double _scaleY = 0.0;
+  int _lastTime = 0; //最后点的时间
 
   final int gridRows = 3;
   final int gridColumns = 0;
@@ -53,6 +53,7 @@ class ChartPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
+    print('-------------------paint--------------');
     double width = size.width - rightWidth;
     double height = size.height - dateHeight;
     screenWidth = width / (1 + offsetRatio);
@@ -93,7 +94,6 @@ class ChartPainter extends CustomPainter {
     print( '-------');
 */
 
-
     //canvas.save();
     drawBg(canvas, size);
     drawGrid(canvas);
@@ -112,6 +112,8 @@ class ChartPainter extends CustomPainter {
     openPoints.forEach((point) {
       drawPoint(canvas, point.value, point.offset);
     });
+
+    drawCountTime(canvas);
     //canvas.restore();
   }
 
@@ -120,9 +122,6 @@ class ChartPainter extends CustomPainter {
     if (initIndex == null || initIndex == 0) {
       initIndex = datas.length - 1;
     }
-
-    maxIndex = initIndex - 1;
-    minIndex = initIndex - (datas.length - 1);
 
     var realX = (initIndex - 1) * screenWidth - scrollX - offsetWidth;
     var startLen = realX * screenDataLen ~/ screenWidth;
@@ -165,15 +164,14 @@ class ChartPainter extends CustomPainter {
     }
   }
 
-
   void calculateValue() {
-    double maxValue=0;
-    double minValue=0;
-    List<TsEntity> tss = [];
+    var maxValue = 0.0;
+    var minValue = 0.0;
+    var tss = <TsEntity>[];
     if (_oneTss != null) tss.addAll(_oneTss);
     if (_twoTss != null) tss.addAll(_twoTss);
     if (_threeTss != null) tss.addAll(_threeTss);
-    for(int i=0;i<tss.length;i++){
+    for (int i = 0; i < tss.length; i++) {
       if (i == 0 || maxValue < tss[i].value) {
         maxValue = tss[i].value;
       }
@@ -181,9 +179,12 @@ class ChartPainter extends CustomPainter {
         minValue = tss[i].value;
       }
     }
-    // _maxValue = (_maxValue-_minValue)/gridRows;
-    _maxValue = maxValue + 100;
-    _minValue = minValue - 100;
+    if (tss.length > 0) {
+      _lastTime = tss.last.time;
+    }
+    var _gridValue = (maxValue-minValue)/gridRows/2;
+    _maxValue = maxValue + _gridValue;
+    _minValue = minValue - _gridValue;
     if (_maxValue == _minValue) {
       _maxValue *= 1.5;
       _minValue /= 2;
@@ -205,7 +206,7 @@ class ChartPainter extends CustomPainter {
     for (int i = 0; i <= gridRows; i++) {
       canvas.drawLine(
         Offset(0, rowSpace * i),
-        Offset(chartRect.width, rowSpace * i),
+        Offset(chartRect.width + rightWidth, rowSpace * i),
         gridPaint,
       );
     }
@@ -228,22 +229,23 @@ class ChartPainter extends CustomPainter {
     for (int i = 0; i <= gridRows; i++) {
       painter = TextPainter(
         text: TextSpan(
-          text: (_maxValue - gridVal * i).toString(),
+          text: (_maxValue - gridVal * i).toStringAsFixed(4),
           style: TextStyle(
             color: textColor,
             fontSize: fontSize,
           ),
         ),
         textDirection: TextDirection.ltr,
+        textAlign: TextAlign.right,
       );
       var valueDy = chartRect.top + chartRect.height / gridRows * i;
       if (i == gridRows) {
-        valueDy -= fontSize;
+        valueDy -= fontSize * 1.2;
       } else if (i > 0) {
-        valueDy -= fontSize / 2;
+        valueDy -= fontSize * 1.2;
       }
-      painter.layout();
-      painter.paint(canvas, Offset(chartRect.right + 5, valueDy));
+      painter.layout(minWidth: rightWidth, maxWidth: rightWidth);
+      painter.paint(canvas, Offset(chartRect.right, valueDy));
     }
   }
 
@@ -378,7 +380,7 @@ class ChartPainter extends CustomPainter {
       begin: Alignment.centerLeft,
       end: Alignment.centerRight,
       colors: [
-        Color(0x99666666),
+        Color(0x33666666),
         Color(0x00FFFFFF),
       ],
     );
@@ -405,6 +407,45 @@ class ChartPainter extends CustomPainter {
     );
     textPainter.layout();
     textPainter.paint(canvas, Offset(startX - fontSize, chartRect.bottom));
+  }
+
+  //画倒计时
+  void drawCountTime(Canvas canvas) {
+    var lastTime = datas?.last?.tss?.last?.time;
+    if (lastTime != null) {
+      if (lastTime == _lastTime) {
+        var startX = (_lastTime - _startTime - _startNum) * pointWidth;
+        var second = (screenDataLen - lastTime % screenDataLen).toString();
+
+        final lh = 1.2;
+        final mw = second.length * fontSize;
+        final rect = Rect.fromLTRB(
+          startX - mw / 2,
+          chartRect.bottom,
+          startX + mw / 2,
+          chartRect.bottom + fontSize * lh,
+        );
+        final paint = Paint()
+          ..color = antiColor
+          ..style = PaintingStyle.fill;
+        canvas.drawRect(rect, paint);
+
+        final textPainter = TextPainter(
+          text: TextSpan(
+            text: second,
+            style: TextStyle(
+              height: lh,
+              color: Colors.white,
+              fontSize: fontSize,
+            ),
+          ),
+          textDirection: TextDirection.ltr,
+          textAlign: TextAlign.center,
+        );
+        textPainter.layout(minWidth: mw);
+        textPainter.paint(canvas, Offset(startX - mw / 2, chartRect.bottom));
+      }
+    }
   }
 
   @override

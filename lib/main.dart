@@ -64,9 +64,8 @@ class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final datas = getDatas();
-    final initIndex = datas.length-1;
+    final initIndex = datas.length - 1;
 
-    print('--------------222---------');
     return Scaffold(
       appBar: AppBar(
         title: Text(title),
@@ -80,23 +79,48 @@ class HomePage extends StatelessWidget {
               key: _key,
               datas: datas,
               initIndex: initIndex,
-              isOnDrag: (int index){
+              isOnDrag: (int index) {
                 print('----------index : $index----------------');
               },
             ),
           ),
-          FlatButton(
-            color: Colors.deepOrange,
-            child: Text('add'),
-            onPressed: () {
-              datas.add(
-                PeriodEntity(
-                  openTime: 1586427900 + 16 * 60,
-                  closeTime: 1586427900 + 17 * 60,
-                ),
-              );
-            },
+          Wrap(
+            spacing: 10,
+            children: <Widget>[
+              FlatButton(
+                color: Colors.deepOrange,
+                child: Text('add Period',style: TextStyle(color: Colors.white)),
+                onPressed: () {
+                  _key.currentState.addPeriod(
+                    PeriodEntity(
+                      openTime: 1586427900 + 16 * 60,
+                      closeTime: 1586427900 + 17 * 60,
+                    ),
+                  );
+                },
+              ),
+              FlatButton(
+                color: Colors.deepOrange,
+                child: Text('update Period',style: TextStyle(color: Colors.white)),
+                onPressed: () {
+                  _key.currentState.addPeriod(
+                    PeriodEntity(
+                      openTime: 1586427900 + 16 * 60,
+                      closeTime: 1586427900 + 17 * 60,
+                    ),
+                  );
+                },
+              ),
+              FlatButton(
+                color: Colors.deepOrange,
+                child: Text('select index=2',style: TextStyle(color: Colors.white)),
+                onPressed: () {
+                  _key.currentState.onSelect(2);
+                },
+              ),
+            ],
           ),
+
         ],
       ),
     );

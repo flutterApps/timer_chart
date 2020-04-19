@@ -21,13 +21,12 @@ class ChartWidget extends StatefulWidget {
 class ChartWidgetState extends State<ChartWidget> with TickerProviderStateMixin {
   final Curve flingCurve = Curves.decelerate;
   final double flingRatio = 0.5;
-  final int flingTime = 500;
+  final int flingTime = 600;
 
   AnimationController _controller;
   Animation<double> aniX;
   double mScrollX = 0.0;
   double mSelectX = 0.0;
-  double mWidth = 0;
   bool isDrag = false;
 
   @override
@@ -46,7 +45,7 @@ class ChartWidgetState extends State<ChartWidget> with TickerProviderStateMixin 
       onHorizontalDragEnd: (DragEndDetails details) {
         var velocity = details.velocity.pixelsPerSecond.dx;
         print('---------onHorizontalDragEnd    $velocity    $mScrollX------');
-        _onFling(velocity, flingTime);
+        _onFling(velocity);
       },
       onHorizontalDragCancel: () {
         print('----------------------onHorizontalDragCancel-------------------------');
@@ -80,11 +79,25 @@ class ChartWidgetState extends State<ChartWidget> with TickerProviderStateMixin 
     );
   }
 
+  void addPeriod(PeriodEntity period) {
+    widget.datas.add(period);
+    _onFling(-ChartPainter.screenWidth);
+  }
+
+  void addTs(PeriodEntity period) {
+    widget.datas.add(period);
+    _onFling(-ChartPainter.screenWidth);
+  }
+
+  void onSelect(int index) {
+    _onSelect(index);
+  }
+
   void _stopAnimation({bool needNotify = true}) {
     if (_controller != null && _controller.isAnimating) {
       _controller.stop();
       if (needNotify) {
-        notifyChanged();
+        _notifyChanged();
       }
     }
   }
@@ -95,9 +108,7 @@ class ChartWidgetState extends State<ChartWidget> with TickerProviderStateMixin 
     }
   }
 
-  void _onFling(double x, int flingTime) {
-    print('---------x---------------- $x ---');
-    var currIndex;
+  void _onFling(double x) {
     var offsetIndex;
     var tempX = x * flingRatio + mScrollX;
     if (x > 0) {
@@ -105,13 +116,22 @@ class ChartWidgetState extends State<ChartWidget> with TickerProviderStateMixin 
     } else {
       offsetIndex = (tempX / ChartPainter.screenWidth).floor();
     }
-    if(offsetIndex<=ChartPainter.minIndex){
-      offsetIndex = ChartPainter.minIndex;
+     var index = widget.initIndex - offsetIndex;
+    _onSelect(index);
+  }
+
+
+  void _onSelect(int index){
+    var offsetIndex = widget.initIndex - index;
+    var maxIndex = widget.initIndex - 1;
+    var minIndex = widget.initIndex - (widget.datas.length - 1);
+    if (offsetIndex <= minIndex) {
+      offsetIndex = minIndex;
     }
-    if(offsetIndex>=ChartPainter.maxIndex){
-      offsetIndex = ChartPainter.maxIndex;
+    if (offsetIndex >= maxIndex) {
+      offsetIndex = maxIndex;
     }
-    currIndex = widget.initIndex-offsetIndex;
+    var currIndex = widget.initIndex - offsetIndex;
     var endX = offsetIndex * ChartPainter.screenWidth;
     _controller = AnimationController(
         duration: Duration(
@@ -128,26 +148,29 @@ class ChartWidgetState extends State<ChartWidget> with TickerProviderStateMixin 
     ));
 
     aniX.addListener(() {
+      print('--11--- ${aniX.value} -------');
       mScrollX = aniX.value;
-      var minScrollX = ChartPainter.minIndex * ChartPainter.screenWidth;
-      var maxScrollX = ChartPainter.maxIndex * ChartPainter.screenWidth;
-      if (mScrollX <= minScrollX) {
+      var minScrollX = minIndex * ChartPainter.screenWidth;
+      var maxScrollX = maxIndex * ChartPainter.screenWidth;
+      if (mScrollX < minScrollX) {
+        print('--12--- ${mScrollX} --- $minScrollX ----');
         mScrollX = minScrollX;
         _stopAnimation();
-      } else if (mScrollX >= maxScrollX) {
+      } else if (mScrollX > maxScrollX) {
+        print('--13--- ${mScrollX} --- $maxScrollX----');
         mScrollX = maxScrollX;
         _stopAnimation();
       }
-      notifyChanged();
+      _notifyChanged();
     });
     aniX.addStatusListener((status) {
       if (status == AnimationStatus.completed || status == AnimationStatus.dismissed) {
         _onDragChanged(currIndex);
-        notifyChanged();
+        _notifyChanged();
       }
     });
     _controller.forward();
   }
 
-  void notifyChanged() => setState(() {});
+  void _notifyChanged() => setState(() {});
 }
