@@ -26,6 +26,7 @@ class ChartWidgetState extends State<ChartWidget> with TickerProviderStateMixin 
   AnimationController _controller;
   Animation<double> aniX;
   double mScrollX = 0.0;
+  double mStartX = 0.0;
   double mSelectX = 0.0;
   bool isDrag = false;
 
@@ -33,7 +34,9 @@ class ChartWidgetState extends State<ChartWidget> with TickerProviderStateMixin 
   Widget build(BuildContext context) {
     return GestureDetector(
       onHorizontalDragDown: (details) {
-        print('---------onHorizontalDragDown-------------------------');
+        mStartX = mScrollX;
+        print(
+            '---------onHorizontalDragDown-------------details:${details.toString()}------------');
       },
       onHorizontalDragUpdate: (details) {
         setState(() {
@@ -44,7 +47,8 @@ class ChartWidgetState extends State<ChartWidget> with TickerProviderStateMixin 
       },
       onHorizontalDragEnd: (DragEndDetails details) {
         var velocity = details.velocity.pixelsPerSecond.dx;
-        print('---------onHorizontalDragEnd    $velocity    $mScrollX------');
+        print(
+            '---------onHorizontalDragEnd    $velocity    $mScrollX---:${details.primaryVelocity}---');
         _onFling(velocity);
       },
       onHorizontalDragCancel: () {
@@ -111,17 +115,16 @@ class ChartWidgetState extends State<ChartWidget> with TickerProviderStateMixin 
   void _onFling(double x) {
     var offsetIndex;
     var tempX = x * flingRatio + mScrollX;
-    if (x > 0) {
+    if (mScrollX > mStartX) {
       offsetIndex = (tempX / ChartPainter.screenWidth).ceil();
     } else {
       offsetIndex = (tempX / ChartPainter.screenWidth).floor();
     }
-     var index = widget.initIndex - offsetIndex;
+    var index = widget.initIndex - offsetIndex;
     _onSelect(index);
   }
 
-
-  void _onSelect(int index){
+  void _onSelect(int index) {
     var offsetIndex = widget.initIndex - index;
     var maxIndex = widget.initIndex - 1;
     var minIndex = widget.initIndex - (widget.datas.length - 1);
@@ -148,16 +151,13 @@ class ChartWidgetState extends State<ChartWidget> with TickerProviderStateMixin 
     ));
 
     aniX.addListener(() {
-      print('--11--- ${aniX.value} -------');
       mScrollX = aniX.value;
       var minScrollX = minIndex * ChartPainter.screenWidth;
       var maxScrollX = maxIndex * ChartPainter.screenWidth;
       if (mScrollX < minScrollX) {
-        print('--12--- ${mScrollX} --- $minScrollX ----');
         mScrollX = minScrollX;
         _stopAnimation();
       } else if (mScrollX > maxScrollX) {
-        print('--13--- ${mScrollX} --- $maxScrollX----');
         mScrollX = maxScrollX;
         _stopAnimation();
       }

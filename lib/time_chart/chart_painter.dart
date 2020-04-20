@@ -18,7 +18,6 @@ class ChartPainter extends CustomPainter {
   Rect chartRect;
   int showDataLen; // 显示点数量
   double pointWidth; // 数据点宽度
-  double offsetWidth; // 默认偏移宽度
 
   //显示点数据参数
   int _startNum = 0; //周期分割线
@@ -53,12 +52,10 @@ class ChartPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    print('-------------------paint--------------');
     double width = size.width - rightWidth;
     double height = size.height - dateHeight;
-    screenWidth = width / (1 + offsetRatio);
-    offsetWidth = width - screenWidth;
-    showDataLen = (screenDataLen * (1 + offsetRatio)).toInt();
+    screenWidth = width / (1 + offsetRatio *2);
+    showDataLen = (screenDataLen * (1 + offsetRatio*2)).toInt();
     pointWidth = width / showDataLen;
     chartRect = Rect.fromLTRB(0, 0, width, height);
 
@@ -123,8 +120,9 @@ class ChartPainter extends CustomPainter {
       initIndex = datas.length - 1;
     }
 
-    var realX = (initIndex - 1) * screenWidth - scrollX - offsetWidth;
-    var startLen = realX * screenDataLen ~/ screenWidth;
+    var leftLen = (showDataLen - screenDataLen)~/2;
+    var realX = (initIndex - 1) * screenWidth - scrollX;
+    var startLen = (realX * screenDataLen / screenWidth).round()-leftLen;
     _startNum = startLen % screenDataLen;
 
     if (realX > 0) {
@@ -136,6 +134,17 @@ class ChartPainter extends CustomPainter {
       _startIndex = (startLen / screenDataLen).floor();
     }
     _startTime = datas[initIndex].openTime + (_startIndex - initIndex) * screenDataLen;
+
+
+    print('-'
+        'initIndex:$initIndex- '
+        'screenWidth:$screenWidth- '
+        'scrollX:$scrollX- '
+        'screenDataLen:$screenDataLen '
+        'realX:$realX '
+        'startLen:$startLen '
+        '_startNum:$_startNum '
+        '_startIndex:$_startIndex ');
 
     if (_startIndex >= 0 && _startIndex < datas.length) {
       if (_startNum >= 0) {
@@ -158,7 +167,7 @@ class ChartPainter extends CustomPainter {
       if (screenDataLen * 2 - _startNum < showDataLen) {
         var endNum = showDataLen - screenDataLen * 2 + _startNum;
         if (endNum > 0) {
-          _threeTss = datas[threeIndex].tss?.sublist(0, endNum);
+          _threeTss = datas[threeIndex].tss?.sublist(0, endNum+1);
         }
       }
     }
