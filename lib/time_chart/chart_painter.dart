@@ -135,7 +135,9 @@ class ChartPainter extends CustomPainter {
 
     if (_startIndex >= 0 && _startIndex < datas.length) {
       if (_startNum >= 0) {
-        _oneTss = datas[_startIndex].tss?.sublist(_startNum);
+        if (datas[_startIndex].tss != null && datas[_startIndex].tss.isNotEmpty) {
+          _oneTss = datas[_startIndex].tss?.sublist(_startNum);
+        }
       }
     }
     var twoIndex = _startIndex + 1;
@@ -145,7 +147,9 @@ class ChartPainter extends CustomPainter {
       } else {
         var endNum = showDataLen - screenDataLen + _startNum;
         if (endNum > 0) {
-          _twoTss = datas[twoIndex].tss?.sublist(0, endNum);
+          if (datas[twoIndex].tss != null && datas[twoIndex].tss.isNotEmpty) {
+            _twoTss = datas[twoIndex].tss?.sublist(0, endNum + 1);
+          }
         }
       }
     }
@@ -154,7 +158,9 @@ class ChartPainter extends CustomPainter {
       if (screenDataLen * 2 - _startNum < showDataLen) {
         var endNum = showDataLen - screenDataLen * 2 + _startNum;
         if (endNum > 0) {
-          _threeTss = datas[threeIndex].tss?.sublist(0, endNum + 1);
+          if (datas[threeIndex].tss != null && datas[threeIndex].tss.isNotEmpty) {
+            _threeTss = datas[threeIndex].tss?.sublist(0, endNum + 1);
+          }
         }
       }
     }
@@ -334,7 +340,8 @@ class ChartPainter extends CustomPainter {
       circlePaint..color = primaryColor;
       canvas.drawCircle(point.offset, fontSize / 4, circlePaint);
 
-      double w = point.value.toString().length * fontSize;
+      String text = point.value.toString();
+      double w = text.length * fontSize * 3 / 4;
       bgPath = Path()
         ..moveTo(point.offset.dx + h / 3, point.offset.dy)
         ..lineTo(point.offset.dx + h / 3 + h / 6, point.offset.dy - h / 6)
@@ -347,7 +354,7 @@ class ChartPainter extends CustomPainter {
 
       textPainter = TextPainter(
         text: TextSpan(
-          text: point.value.toString(),
+          text: text,
           style: TextStyle(
             height: 1.5,
             color: Colors.white,

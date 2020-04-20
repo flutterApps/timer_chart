@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'entity/period_entity.dart';
 import 'chart_painter.dart';
+import 'entity/ts_entity.dart';
 
 class ChartWidget extends StatefulWidget {
   final List<PeriodEntity> datas;
@@ -88,9 +89,14 @@ class ChartWidgetState extends State<ChartWidget> with TickerProviderStateMixin 
     _onFling(-ChartPainter.screenWidth);
   }
 
-  void addTs(PeriodEntity period) {
-    widget.datas.add(period);
-    _onFling(-ChartPainter.screenWidth);
+  void addTs(TsEntity ts) {
+    List<TsEntity> tss = widget.datas.last.tss;
+    if (tss == null) {
+      tss = <TsEntity>[];
+    }
+    tss.add(ts);
+    widget.datas.last.tss = tss;
+    _notifyChanged();
   }
 
   void onSelect(int index) {

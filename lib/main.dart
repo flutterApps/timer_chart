@@ -65,6 +65,7 @@ class HomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     final datas = getDatas();
     final initIndex = datas.length - 1;
+    int i = 0;
 
     return Scaffold(
       appBar: AppBar(
@@ -89,7 +90,7 @@ class HomePage extends StatelessWidget {
             children: <Widget>[
               FlatButton(
                 color: Colors.deepOrange,
-                child: Text('add Period',style: TextStyle(color: Colors.white)),
+                child: Text('add Period', style: TextStyle(color: Colors.white)),
                 onPressed: () {
                   _key.currentState.addPeriod(
                     PeriodEntity(
@@ -101,26 +102,26 @@ class HomePage extends StatelessWidget {
               ),
               FlatButton(
                 color: Colors.deepOrange,
-                child: Text('update Period',style: TextStyle(color: Colors.white)),
+                child: Text('add Ts', style: TextStyle(color: Colors.white)),
                 onPressed: () {
-                  _key.currentState.addPeriod(
-                    PeriodEntity(
-                      openTime: 1586427900 + 16 * 60,
-                      closeTime: 1586427900 + 17 * 60,
+                  _key.currentState.addTs(
+                    TsEntity(
+                      time: 1586427900 + 16 * 60 + i,
+                      value: (randomDouble(4) - 500).abs(),
                     ),
                   );
+                  i++;
                 },
               ),
               FlatButton(
                 color: Colors.deepOrange,
-                child: Text('select index=2',style: TextStyle(color: Colors.white)),
+                child: Text('select index=2', style: TextStyle(color: Colors.white)),
                 onPressed: () {
                   _key.currentState.onSelect(2);
                 },
               ),
             ],
           ),
-
         ],
       ),
     );
