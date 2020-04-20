@@ -435,14 +435,22 @@ class ChartPainter extends CustomPainter {
 
       //倒计时
       if (last.time == _lastTime) {
-        String second = (screenDataLen - last.time % screenDataLen).toString();
-        final double lh = 1.2;
-        final double tw = second.length * fontSize;
+        String second;
+        final int len = last.time % screenDataLen;
+        if (len > 0) {
+          second = (screenDataLen - len).toString();
+        } else {
+          second = len.toString();
+        }
+        double width = fontSize * second.length;
+        if (width < fontSize * 2) {
+          width = fontSize * 2;
+        }
         final Rect rect = Rect.fromLTRB(
-          startX - tw / 2,
+          startX - width / 2,
           chartRect.bottom,
-          startX + tw / 2,
-          chartRect.bottom + fontSize * lh,
+          startX + width / 2,
+          chartRect.bottom + fontSize * 1.2,
         );
         final paint = Paint()
           ..color = antiColor
@@ -453,7 +461,7 @@ class ChartPainter extends CustomPainter {
           text: TextSpan(
             text: second,
             style: TextStyle(
-              height: lh,
+              height: 1.3,
               color: Colors.white,
               fontSize: fontSize,
             ),
@@ -461,8 +469,8 @@ class ChartPainter extends CustomPainter {
           textDirection: TextDirection.ltr,
           textAlign: TextAlign.center,
         );
-        textPainter.layout(minWidth: tw);
-        textPainter.paint(canvas, Offset(startX - tw / 2, chartRect.bottom));
+        textPainter.layout(minWidth: width);
+        textPainter.paint(canvas, Offset(startX - width / 2, chartRect.bottom));
 
         //画直线
         final linePaint = Paint()
