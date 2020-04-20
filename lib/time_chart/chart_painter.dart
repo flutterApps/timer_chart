@@ -54,8 +54,8 @@ class ChartPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     double width = size.width - rightWidth;
     double height = size.height - dateHeight;
-    screenWidth = width / (1 + offsetRatio *2);
-    showDataLen = (screenDataLen * (1 + offsetRatio*2)).toInt();
+    screenWidth = width / (1 + offsetRatio * 2);
+    showDataLen = (screenDataLen * (1 + offsetRatio * 2)).toInt();
     pointWidth = width / showDataLen;
     chartRect = Rect.fromLTRB(0, 0, width, height);
 
@@ -106,11 +106,9 @@ class ChartPainter extends CustomPainter {
     }
     drawGapDate(canvas);
 
-    openPoints.forEach((point) {
-      drawPoint(canvas, point.value, point.offset);
-    });
+    drawPoint(canvas);
+    drawLastPoint(canvas);
 
-    drawCountTime(canvas);
     //canvas.restore();
   }
 
@@ -120,9 +118,9 @@ class ChartPainter extends CustomPainter {
       initIndex = datas.length - 1;
     }
 
-    var leftLen = (showDataLen - screenDataLen)~/2;
+    var leftLen = (showDataLen - screenDataLen) ~/ 2;
     var realX = (initIndex - 1) * screenWidth - scrollX;
-    var startLen = (realX * screenDataLen / screenWidth).round()-leftLen;
+    var startLen = (realX * screenDataLen / screenWidth).round() - leftLen;
     _startNum = startLen % screenDataLen;
 
     if (realX > 0) {
@@ -134,17 +132,6 @@ class ChartPainter extends CustomPainter {
       _startIndex = (startLen / screenDataLen).floor();
     }
     _startTime = datas[initIndex].openTime + (_startIndex - initIndex) * screenDataLen;
-
-
-    print('-'
-        'initIndex:$initIndex- '
-        'screenWidth:$screenWidth- '
-        'scrollX:$scrollX- '
-        'screenDataLen:$screenDataLen '
-        'realX:$realX '
-        'startLen:$startLen '
-        '_startNum:$_startNum '
-        '_startIndex:$_startIndex ');
 
     if (_startIndex >= 0 && _startIndex < datas.length) {
       if (_startNum >= 0) {
@@ -167,7 +154,7 @@ class ChartPainter extends CustomPainter {
       if (screenDataLen * 2 - _startNum < showDataLen) {
         var endNum = showDataLen - screenDataLen * 2 + _startNum;
         if (endNum > 0) {
-          _threeTss = datas[threeIndex].tss?.sublist(0, endNum+1);
+          _threeTss = datas[threeIndex].tss?.sublist(0, endNum + 1);
         }
       }
     }
@@ -191,7 +178,7 @@ class ChartPainter extends CustomPainter {
     if (tss.length > 0) {
       _lastTime = tss.last.time;
     }
-    var _gridValue = (maxValue-minValue)/gridRows/2;
+    var _gridValue = (maxValue - minValue) / gridRows / 2;
     _maxValue = maxValue + _gridValue;
     _minValue = minValue - _gridValue;
     if (_maxValue == _minValue) {
@@ -207,10 +194,10 @@ class ChartPainter extends CustomPainter {
   //画网格
   void drawGrid(Canvas canvas) {
     Paint gridPaint = Paint()
-      ..isAntiAlias = true
-      ..filterQuality = FilterQuality.high
       ..strokeWidth = 0.5
-      ..color = Color(0xff4c5c74);
+      ..color = Color(0xFF999999)
+      ..isAntiAlias = true
+      ..filterQuality = FilterQuality.high;
     double rowSpace = chartRect.height / gridRows;
     for (int i = 0; i <= gridRows; i++) {
       canvas.drawLine(
@@ -228,6 +215,13 @@ class ChartPainter extends CustomPainter {
           gridPaint,
         );
       }
+    }
+    if (gridColumns == 0) {
+      canvas.drawLine(
+        Offset(chartRect.right, 0),
+        Offset(chartRect.right, chartRect.bottom),
+        gridPaint,
+      );
     }
   }
 
@@ -252,6 +246,8 @@ class ChartPainter extends CustomPainter {
         valueDy -= fontSize * 1.2;
       } else if (i > 0) {
         valueDy -= fontSize * 1.2;
+      } else if (i == 0) {
+        valueDy += fontSize * 0.2;
       }
       painter.layout(minWidth: rightWidth, maxWidth: rightWidth);
       painter.paint(canvas, Offset(chartRect.right, valueDy));
@@ -318,50 +314,55 @@ class ChartPainter extends CustomPainter {
   }
 
   //画开盘点
-  void drawPoint(Canvas canvas, double value, Offset offset) {
-    Color showColor = primaryColor;
-    double w = fontSize * 6 / 1.6;
-    double h = fontSize * 1.6;
-
+  void drawPoint(Canvas canvas) {
     final circlePaint = Paint()
       ..strokeWidth = 1
-      ..color = showColor;
-    canvas.drawCircle(offset, fontSize / 4 + 2, circlePaint);
-    circlePaint..color = Colors.white;
-    canvas.drawCircle(offset, fontSize / 4 + 1, circlePaint);
-    circlePaint..color = showColor;
-    canvas.drawCircle(offset, fontSize / 4, circlePaint);
+      ..color = primaryColor;
 
-    /*
-      final linePaint = Paint()
-        ..color = showColor;
-      canvas.drawLine(point, Offset(chartRect.width-point.dx, point.dy), linePaint);
-       */
-
-    final bgPath = Path()..moveTo(offset.dx + fontSize / 2, offset.dy);
-    bgPath.lineTo(offset.dx + fontSize / 2 + h / 6, offset.dy - h / 6);
-    bgPath.lineTo(offset.dx + fontSize / 2 + h / 6, offset.dy - h / 2);
-    bgPath.lineTo(offset.dx + fontSize / 2 + h / 6 + w, offset.dy - h / 2);
-    bgPath.lineTo(offset.dx + fontSize / 2 + h / 6 + w, offset.dy + h / 2);
-    bgPath.lineTo(offset.dx + fontSize / 2 + h / 6, offset.dy + h / 2);
-    bgPath.lineTo(offset.dx + fontSize / 2 + h / 6, offset.dy + h / 6);
     final bgPaint = Paint()
       ..style = PaintingStyle.fill
-      ..color = showColor;
-    canvas.drawPath(bgPath, bgPaint);
+      ..color = primaryColor;
 
-    final textPainter = TextPainter(
-      text: TextSpan(
-        text: value.toString(),
-        style: TextStyle(
-          color: Colors.white,
-          fontSize: fontSize,
+    Path bgPath;
+    TextPainter textPainter;
+    double h = fontSize * 1.6;
+
+    openPoints.forEach((point) {
+      canvas.drawCircle(point.offset, fontSize / 4 + 2, circlePaint);
+      circlePaint..color = Colors.white;
+      canvas.drawCircle(point.offset, fontSize / 4 + 1, circlePaint);
+      circlePaint..color = primaryColor;
+      canvas.drawCircle(point.offset, fontSize / 4, circlePaint);
+
+      double w = point.value.toString().length * fontSize;
+      bgPath = Path()
+        ..moveTo(point.offset.dx + h / 3, point.offset.dy)
+        ..lineTo(point.offset.dx + h / 3 + h / 6, point.offset.dy - h / 6)
+        ..lineTo(point.offset.dx + h / 3 + h / 6, point.offset.dy - h / 2)
+        ..lineTo(point.offset.dx + h / 3 + h / 6 + w, point.offset.dy - h / 2)
+        ..lineTo(point.offset.dx + h / 3 + h / 6 + w, point.offset.dy + h / 2)
+        ..lineTo(point.offset.dx + h / 3 + h / 6, point.offset.dy + h / 2)
+        ..lineTo(point.offset.dx + h / 3 + h / 6, point.offset.dy + h / 6);
+      canvas.drawPath(bgPath, bgPaint);
+
+      textPainter = TextPainter(
+        text: TextSpan(
+          text: point.value.toString(),
+          style: TextStyle(
+            height: 1.5,
+            color: Colors.white,
+            fontSize: fontSize,
+          ),
         ),
-      ),
-      textDirection: TextDirection.ltr,
-    );
-    textPainter.layout();
-    textPainter.paint(canvas, Offset(offset.dx + h / 1.5, offset.dy - h / 2.6));
+        textDirection: TextDirection.ltr,
+        textAlign: TextAlign.center,
+      );
+      textPainter.layout(minWidth: w);
+      textPainter.paint(
+        canvas,
+        Offset(point.offset.dx + h / 2, point.offset.dy - h / 2),
+      );
+    });
   }
 
   //画周期|时间
@@ -418,20 +419,29 @@ class ChartPainter extends CustomPainter {
     textPainter.paint(canvas, Offset(startX - fontSize, chartRect.bottom));
   }
 
-  //画倒计时
-  void drawCountTime(Canvas canvas) {
-    var lastTime = datas?.last?.tss?.last?.time;
-    if (lastTime != null) {
-      if (lastTime == _lastTime) {
-        var startX = (_lastTime - _startTime - _startNum) * pointWidth;
-        var second = (screenDataLen - lastTime % screenDataLen).toString();
+  //画末尾点
+  void drawLastPoint(Canvas canvas) {
+    TsEntity last = datas?.last?.tss?.last;
+    if (last != null) {
+      double value = last.value;
+      if (value > _maxValue) {
+        value = _maxValue;
+      }
+      if (value < _minValue) {
+        value = _minValue;
+      }
+      double startY = (_maxValue - value) * _scaleY;
+      double startX = (_lastTime - _startTime - _startNum) * pointWidth;
 
-        final lh = 1.2;
-        final mw = second.length * fontSize;
-        final rect = Rect.fromLTRB(
-          startX - mw / 2,
+      //倒计时
+      if (last.time == _lastTime) {
+        String second = (screenDataLen - last.time % screenDataLen).toString();
+        final double lh = 1.2;
+        final double tw = second.length * fontSize;
+        final Rect rect = Rect.fromLTRB(
+          startX - tw / 2,
           chartRect.bottom,
-          startX + mw / 2,
+          startX + tw / 2,
           chartRect.bottom + fontSize * lh,
         );
         final paint = Paint()
@@ -451,9 +461,49 @@ class ChartPainter extends CustomPainter {
           textDirection: TextDirection.ltr,
           textAlign: TextAlign.center,
         );
-        textPainter.layout(minWidth: mw);
-        textPainter.paint(canvas, Offset(startX - mw / 2, chartRect.bottom));
+        textPainter.layout(minWidth: tw);
+        textPainter.paint(canvas, Offset(startX - tw / 2, chartRect.bottom));
+
+        //画直线
+        final linePaint = Paint()
+          ..strokeWidth = 0.5
+          ..color = antiColor;
+        canvas.drawLine(
+          Offset(startX, startY),
+          Offset(chartRect.right, startY),
+          linePaint,
+        );
       }
+
+      //画价格
+      final Rect rect = Rect.fromLTRB(
+        chartRect.right,
+        startY,
+        chartRect.right + rightWidth,
+        startY + fontSize * 1.6,
+      );
+      final paint = Paint()
+        ..color = antiColor
+        ..style = PaintingStyle.fill;
+      canvas.drawRect(rect, paint);
+
+      TextPainter textPainter = TextPainter(
+        text: TextSpan(
+          text: last.value.toString(),
+          style: TextStyle(
+            height: 1.5,
+            color: Colors.white,
+            fontSize: fontSize,
+          ),
+        ),
+        textDirection: TextDirection.ltr,
+        textAlign: TextAlign.center,
+      );
+      textPainter.layout(minWidth: rightWidth);
+      textPainter.paint(
+        canvas,
+        Offset(chartRect.right, startY),
+      );
     }
   }
 
