@@ -5,13 +5,13 @@ import 'entity/ts_entity.dart';
 
 class ChartWidget extends StatefulWidget {
   final List<PeriodEntity> datas;
-  final Function(int) isOnDrag;
+  final Function(int) onDrag;
   final int initIndex;
 
   ChartWidget({
     Key key,
     this.datas,
-    this.isOnDrag,
+    this.onDrag,
     this.initIndex,
   }) : super(key: key);
 
@@ -113,8 +113,8 @@ class ChartWidgetState extends State<ChartWidget> with TickerProviderStateMixin 
   }
 
   void _onDragChanged(int index) {
-    if (widget.isOnDrag != null) {
-      widget.isOnDrag(index);
+    if (widget.onDrag != null) {
+      widget.onDrag(index);
     }
   }
 

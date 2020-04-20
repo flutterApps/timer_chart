@@ -80,7 +80,7 @@ class HomePage extends StatelessWidget {
               key: _key,
               datas: datas,
               initIndex: initIndex,
-              isOnDrag: (int index) {
+              onDrag: (int index) {
                 print('----------index : $index----------------');
               },
             ),

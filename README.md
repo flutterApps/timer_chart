@@ -1,4 +1,4 @@
-# flutterapp
+# Timer Chart
 
 A new Flutter application.
 
