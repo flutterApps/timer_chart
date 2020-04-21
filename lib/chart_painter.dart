@@ -12,13 +12,13 @@ class ChartPainter extends CustomPainter {
   List<PeriodEntity> datas;
   double scrollX;
   int initIndex;
-  int screenDataLen; // 每屏点数量
+  int screenLen; // 每屏点数量
   double rightWidth;
   double dateHeight;
   double offsetRatio;
 
   Rect chartRect;
-  int showDataLen; // 显示点数量
+  int showMaxLen; // 显示点数量
   double pointWidth; // 数据点宽度
 
   //显示点数据参数
@@ -46,7 +46,7 @@ class ChartPainter extends CustomPainter {
     this.datas,
     this.scrollX = 0.0,
     this.initIndex = 0,
-    this.screenDataLen = 60,
+    this.screenLen = 60,
     this.rightWidth = 60.0,
     this.dateHeight = 30.0,
     this.offsetRatio = 0.1,
@@ -57,8 +57,8 @@ class ChartPainter extends CustomPainter {
     double width = size.width - rightWidth;
     double height = size.height - dateHeight;
     screenWidth = width / (1 + offsetRatio * 2);
-    showDataLen = (screenDataLen * (1 + offsetRatio * 2)).toInt();
-    pointWidth = width / showDataLen;
+    showMaxLen = (screenLen * (1 + offsetRatio * 2)).toInt();
+    pointWidth = width / showMaxLen;
     chartRect = Rect.fromLTRB(0, 0, width, height);
 
     calculateData();
@@ -67,14 +67,14 @@ class ChartPainter extends CustomPainter {
     /*
     print('-- scrollX:$scrollX --');
     print('-- initIndex:$initIndex --');
-    print('-- screenDataLen:$screenDataLen --');
+    print('-- screenLen:$screenLen --');
     print('-- rightWidth:$rightWidth --');
     print('-- dateHeight:$dateHeight --');
     print( '-- offsetRatio:$offsetRatio --');
 
 
     print( '-- chartRect:${chartRect.toString()} --');
-    print('-- showDataLen:$showDataLen --');
+    print('-- showMaxLen:$showMaxLen --');
     print( '-- pointWidth:$pointWidth --');
     print( '-- offsetWidth:$offsetWidth --');
 
@@ -101,10 +101,10 @@ class ChartPainter extends CustomPainter {
       drawChart(canvas, _oneTss, 0);
     }
     if (_twoTss != null && _twoTss.isNotEmpty) {
-      drawChart(canvas, _twoTss, (screenDataLen - _startNum) * pointWidth);
+      drawChart(canvas, _twoTss, (screenLen - _startNum) * pointWidth);
     }
     if (_threeTss != null && _threeTss.isNotEmpty) {
-      drawChart(canvas, _threeTss, (screenDataLen * 2 - _startNum) * pointWidth);
+      drawChart(canvas, _threeTss, (screenLen * 2 - _startNum) * pointWidth);
     }
     drawGapDate(canvas);
 
@@ -120,20 +120,20 @@ class ChartPainter extends CustomPainter {
       initIndex = datas.length - 1;
     }
 
-    var leftLen = (showDataLen - screenDataLen) ~/ 2;
+    var leftLen = (showMaxLen - screenLen) ~/ 2;
     var realX = (initIndex - 1) * screenWidth - scrollX;
-    var startLen = (realX * screenDataLen / screenWidth).round() - leftLen;
-    _startNum = startLen % screenDataLen;
+    var startLen = (realX * screenLen / screenWidth).round() - leftLen;
+    _startNum = startLen % screenLen;
 
     if (realX > 0) {
-      _startIndex = (startLen / screenDataLen).ceil();
+      _startIndex = (startLen / screenLen).ceil();
       if (_startNum == 0) {
         _startIndex += 1;
       }
     } else {
-      _startIndex = (startLen / screenDataLen).floor();
+      _startIndex = (startLen / screenLen).floor();
     }
-    _startTime = datas[initIndex].openTime + (_startIndex - initIndex) * screenDataLen;
+    _startTime = datas[initIndex].openTime + (_startIndex - initIndex) * screenLen;
 
     if (_startIndex >= 0 && _startIndex < datas.length) {
       if (_startNum >= 0) {
@@ -147,10 +147,10 @@ class ChartPainter extends CustomPainter {
     }
     int twoIndex = _startIndex + 1;
     if (twoIndex >= 0 && twoIndex < datas.length) {
-      if (screenDataLen * 2 - _startNum <= showDataLen) {
+      if (screenLen * 2 - _startNum <= showMaxLen) {
         _twoTss = datas[twoIndex].tss;
       } else {
-        int endNum = showDataLen - screenDataLen + _startNum;
+        int endNum = showMaxLen - screenLen + _startNum;
         if (endNum > 0) {
           if (datas[twoIndex].tss != null && datas[twoIndex].tss.isNotEmpty) {
             int maxLen = datas[twoIndex].tss.length;
@@ -162,8 +162,8 @@ class ChartPainter extends CustomPainter {
     }
     int threeIndex = _startIndex + 2;
     if (threeIndex >= 0 && threeIndex < datas.length) {
-      if (screenDataLen * 2 - _startNum < showDataLen) {
-        int endNum = showDataLen - screenDataLen * 2 + _startNum;
+      if (screenLen * 2 - _startNum < showMaxLen) {
+        int endNum = showMaxLen - screenLen * 2 + _startNum;
         if (endNum > 0) {
           if (datas[threeIndex].tss != null && datas[threeIndex].tss.isNotEmpty) {
             int maxLen = datas[threeIndex].tss.length;
@@ -401,12 +401,12 @@ class ChartPainter extends CustomPainter {
   //画周期|时间
   void drawGapDate(Canvas canvas) {
     for (int i = 0; i < 5; i++) {
-      var num = i * screenDataLen - _startNum;
-      if (num <= showDataLen) {
+      var num = i * screenLen - _startNum;
+      if (num <= showMaxLen) {
         if (num >= 0) {
           var startX = num * pointWidth;
           dragGap(canvas, startX);
-          drawDate(canvas, startX, _startTime + i * screenDataLen);
+          drawDate(canvas, startX, _startTime + i * screenLen);
         }
       }
     }
@@ -469,9 +469,9 @@ class ChartPainter extends CustomPainter {
       //倒计时
       if (last.time == _lastTime) {
         String second;
-        final int len = last.time % screenDataLen;
+        final int len = last.time % screenLen;
         if (len > 0) {
-          second = (screenDataLen - len).toString();
+          second = (screenLen - len).toString();
         } else {
           second = len.toString();
         }
@@ -554,7 +554,7 @@ class ChartPainter extends CustomPainter {
         oldDelegate.datas?.length != datas?.length ||
         oldDelegate.scrollX != scrollX ||
         oldDelegate.initIndex != initIndex ||
-        oldDelegate.screenDataLen != screenDataLen ||
+        oldDelegate.screenLen != screenLen ||
         oldDelegate.rightWidth != rightWidth ||
         oldDelegate.dateHeight != dateHeight ||
         oldDelegate.offsetRatio != offsetRatio;
