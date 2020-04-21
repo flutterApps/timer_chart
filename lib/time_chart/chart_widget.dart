@@ -25,31 +25,41 @@ class ChartWidgetState extends State<ChartWidget> with TickerProviderStateMixin 
   final int flingTime = 600;
 
   AnimationController _controller;
-  Animation<double> aniX;
-  double mScrollX = 0.0;
-  double mStartX = 0.0;
-  double mSelectX = 0.0;
-  bool isDrag = false;
+  Animation<double> _aniX;
+  double _scrollX;
+  double _startX;
+  int _currIndex;
+  bool isDrag;
+
+  @override
+  void initState() {
+    super.initState();
+    if (_scrollX == null) {
+      _scrollX = 0.0;
+    }
+    if (_currIndex == null) {
+      _currIndex = widget.datas.length - 1;
+    }
+    isDrag = false;
+  }
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onHorizontalDragDown: (details) {
-        mStartX = mScrollX;
-        print(
-            '---------onHorizontalDragDown-------------details:${details.toString()}------------');
+        _startX = _scrollX;
+        print('------onHorizontalDragDown------details:${details.toString()}------');
       },
       onHorizontalDragUpdate: (details) {
         setState(() {
-          mScrollX = (details.primaryDelta + mScrollX);
+          _scrollX = (details.primaryDelta + _scrollX);
         });
 
-        print('---------onHorizontalDragUpdate : ${details.primaryDelta} : $mScrollX');
+        print('-----onHorizontalDragUpdate : ${details.primaryDelta} : $_scrollX');
       },
       onHorizontalDragEnd: (DragEndDetails details) {
         var velocity = details.velocity.pixelsPerSecond.dx;
-        print(
-            '---------onHorizontalDragEnd    $velocity    $mScrollX---:${details.primaryVelocity}---');
+        print('-------onHorizontalDragEnd  $velocity  $_scrollX---:${details.primaryVelocity}---');
         _onFling(velocity);
       },
       onHorizontalDragCancel: () {
@@ -77,7 +87,7 @@ class ChartWidgetState extends State<ChartWidget> with TickerProviderStateMixin 
         size: Size(double.infinity, double.infinity),
         painter: ChartPainter(
           datas: widget.datas,
-          scrollX: mScrollX,
+          scrollX: _scrollX,
           initIndex: widget.initIndex,
         ),
       ),
@@ -85,22 +95,21 @@ class ChartWidgetState extends State<ChartWidget> with TickerProviderStateMixin 
   }
 
   void addPeriod(PeriodEntity period) {
-    widget.datas.add(period);
-    _onFling(-ChartPainter.screenWidth);
+    if (period.openTime > widget.datas.last.openTime) {
+      widget.datas.add(period);
+    }
+    _onSelect(_currIndex + 1, false);
   }
 
-  void addTs(TsEntity ts) {
-    List<TsEntity> tss = widget.datas.last.tss;
-    if (tss == null) {
-      tss = <TsEntity>[];
+  void setPeriod(int index, PeriodEntity period) {
+    if (period.openTime == widget.datas.last.openTime) {
+      widget.datas[index] = period;
+      _notifyChanged();
     }
-    tss.add(ts);
-    widget.datas.last.tss = tss;
-    _notifyChanged();
   }
 
   void onSelect(int index) {
-    _onSelect(index);
+    _onSelect(index, false);
   }
 
   void _stopAnimation({bool needNotify = true}) {
@@ -112,25 +121,27 @@ class ChartWidgetState extends State<ChartWidget> with TickerProviderStateMixin 
     }
   }
 
-  void _onDragChanged(int index) {
-    if (widget.onDrag != null) {
-      widget.onDrag(index);
+  void _onDragChanged(int index, bool callback) {
+    if (callback) {
+      if (widget.onDrag != null) {
+        widget.onDrag(index);
+      }
     }
   }
 
   void _onFling(double x) {
-    var offsetIndex;
-    var tempX = x * flingRatio + mScrollX;
-    if (mScrollX > mStartX) {
-      offsetIndex = (tempX / ChartPainter.screenWidth).ceil();
+    int offsetIndex;
+    double tempWidth = x * flingRatio + _scrollX;
+    if (_scrollX > _startX) {
+      offsetIndex = (tempWidth / ChartPainter.screenWidth).ceil();
     } else {
-      offsetIndex = (tempX / ChartPainter.screenWidth).floor();
+      offsetIndex = (tempWidth / ChartPainter.screenWidth).floor();
     }
-    var index = widget.initIndex - offsetIndex;
-    _onSelect(index);
+    int index = widget.initIndex - offsetIndex;
+    _onSelect(index, true);
   }
 
-  void _onSelect(int index) {
+  void _onSelect(int index, bool callback) {
     var offsetIndex = widget.initIndex - index;
     var maxIndex = widget.initIndex - 1;
     var minIndex = widget.initIndex - (widget.datas.length - 1);
@@ -147,31 +158,32 @@ class ChartWidgetState extends State<ChartWidget> with TickerProviderStateMixin 
           milliseconds: flingTime,
         ),
         vsync: this);
-    aniX = null;
-    aniX = Tween<double>(
-      begin: mScrollX,
+    _aniX = null;
+    _aniX = Tween<double>(
+      begin: _scrollX,
       end: endX,
     ).animate(CurvedAnimation(
       parent: _controller,
       curve: flingCurve,
     ));
 
-    aniX.addListener(() {
-      mScrollX = aniX.value;
+    _aniX.addListener(() {
+      _scrollX = _aniX.value;
       var minScrollX = minIndex * ChartPainter.screenWidth;
       var maxScrollX = maxIndex * ChartPainter.screenWidth;
-      if (mScrollX < minScrollX) {
-        mScrollX = minScrollX;
+      if (_scrollX < minScrollX) {
+        _scrollX = minScrollX;
         _stopAnimation();
-      } else if (mScrollX > maxScrollX) {
-        mScrollX = maxScrollX;
+      } else if (_scrollX > maxScrollX) {
+        _scrollX = maxScrollX;
         _stopAnimation();
       }
       _notifyChanged();
     });
-    aniX.addStatusListener((status) {
+    _aniX.addStatusListener((status) {
       if (status == AnimationStatus.completed || status == AnimationStatus.dismissed) {
-        _onDragChanged(currIndex);
+        _currIndex = currIndex;
+        _onDragChanged(currIndex, callback);
         _notifyChanged();
       }
     });

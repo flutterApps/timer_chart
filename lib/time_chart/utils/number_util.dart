@@ -1,4 +1,4 @@
-import 'dart:math';
+import 'dart:math' as math;
 
 class NumberUtil {
   static String format(double n) {
@@ -21,9 +21,9 @@ class NumberUtil {
   }
 
   static int getMaxDecimalLength(double a, double b, double c, double d) {
-    int result = max(getDecimalLength(a), getDecimalLength(b));
-    result = max(result, getDecimalLength(c));
-    result = max(result, getDecimalLength(d));
+    int result = math.max(getDecimalLength(a), getDecimalLength(b));
+    result = math.max(result, getDecimalLength(c));
+    result = math.max(result, getDecimalLength(d));
     return result;
   }
 
@@ -37,8 +37,8 @@ class NumberUtil {
     }
   }
 
-  static int ceil(double val){
-    return val.ceil();
+  static int min(int a,int b){
+    return math.min(a,b);
   }
 
 

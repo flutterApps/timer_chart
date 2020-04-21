@@ -1,5 +1,6 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:flutterapp/timer_chart.dart';
 import 'time_chart/chart_widget.dart';
 import 'time_chart/entity/ts_entity.dart';
 import 'time_chart/entity/period_entity.dart';
@@ -20,17 +21,18 @@ class MyApp extends StatelessWidget {
 }
 
 class HomePage extends StatelessWidget {
-  final GlobalKey<ChartWidgetState> _key = GlobalKey<ChartWidgetState>();
+  final GlobalKey<TimerChartState> _key = GlobalKey<TimerChartState>();
   final String title;
   HomePage({this.title});
 
-  List<PeriodEntity> getDatas() {
+  List<PeriodEntity> getDatas(int len) {
     int cycleTime = 60;
     int startTime = 1586427900;
     var list = <PeriodEntity>[];
-    for (int i = 0; i < 16; i++) {
+    for (int i = 0; i < len; i++) {
       var period = PeriodEntity();
       var openTime = startTime + i * cycleTime;
+      period.type = 1;
       period.openTime = openTime;
       period.closeTime = openTime + cycleTime;
 
@@ -63,9 +65,11 @@ class HomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final datas = getDatas();
-    final initIndex = datas.length - 1;
+    int len = 16;
     int i = 0;
+    int n = 0;
+    final datas = getDatas(16);
+    final showLen = datas.length > 16 ? datas.length : 16;
 
     return Scaffold(
       appBar: AppBar(
@@ -75,14 +79,13 @@ class HomePage extends StatelessWidget {
         children: <Widget>[
           Container(
             height: 300,
-            padding: EdgeInsets.all(10),
-            child: ChartWidget(
+            padding: EdgeInsets.only(top:10),
+            child: TimerChart(
               key: _key,
               datas: datas,
-              initIndex: initIndex,
-              onDrag: (int index) {
-                print('----------index : $index----------------');
-              },
+              showLen: showLen,
+              initIndex: datas.length - 1,
+              showWidth: MediaQuery.of(context).size.width,
             ),
           ),
           Wrap(
@@ -94,20 +97,8 @@ class HomePage extends StatelessWidget {
                 onPressed: () {
                   _key.currentState.addPeriod(
                     PeriodEntity(
-                      openTime: 1586427900 + 16 * 60,
-                      closeTime: 1586427900 + 17 * 60,
-                    ),
-                  );
-                },
-              ),
-              FlatButton(
-                color: Colors.deepOrange,
-                child: Text('add Ts', style: TextStyle(color: Colors.white)),
-                onPressed: () {
-                  _key.currentState.addTs(
-                    TsEntity(
-                      time: 1586427900 + 16 * 60 + i,
-                      value: (randomDouble(4) - 500).abs(),
+                      openTime: 1586427900 + (len + i) * 60,
+                      closeTime: 1586427900 + (len + i + 1) * 60,
                     ),
                   );
                   i++;
@@ -115,9 +106,26 @@ class HomePage extends StatelessWidget {
               ),
               FlatButton(
                 color: Colors.deepOrange,
-                child: Text('select index=2', style: TextStyle(color: Colors.white)),
+                child: Text('add Ts', style: TextStyle(color: Colors.white)),
                 onPressed: () {
-                  _key.currentState.onSelect(2);
+                  if (datas.last.tss == null) {
+                    datas.last.tss = <TsEntity>[
+                      TsEntity(
+                        time: 1586427900 + (len + i-1) * 60 + n,
+                        value: (randomDouble(4) - 500).abs(),
+                      )
+                    ];
+                  } else {
+                    datas.last.tss.add(TsEntity(
+                      time: 1586427900 + (len + i-1) * 60 + n,
+                      value: (randomDouble(4) - 500).abs(),
+                    ));
+                  }
+                  n++;
+                  _key.currentState.setPeriod(
+                    datas.length - 1,
+                    datas.last,
+                  );
                 },
               ),
             ],

@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+
 import 'entity/period_entity.dart';
 import 'entity/point_entity.dart';
 import 'entity/ts_entity.dart';
 import 'utils/date_format_util.dart';
+import 'utils/number_util.dart';
 
 class ChartPainter extends CustomPainter {
   static double screenWidth; // 每屏滚动宽度
@@ -136,30 +138,37 @@ class ChartPainter extends CustomPainter {
     if (_startIndex >= 0 && _startIndex < datas.length) {
       if (_startNum >= 0) {
         if (datas[_startIndex].tss != null && datas[_startIndex].tss.isNotEmpty) {
-          _oneTss = datas[_startIndex].tss?.sublist(_startNum);
-        }
-      }
-    }
-    var twoIndex = _startIndex + 1;
-    if (twoIndex >= 0 && twoIndex < datas.length) {
-      if (screenDataLen * 2 - _startNum <= showDataLen) {
-        _twoTss = datas[twoIndex].tss;
-      } else {
-        var endNum = showDataLen - screenDataLen + _startNum;
-        if (endNum > 0) {
-          if (datas[twoIndex].tss != null && datas[twoIndex].tss.isNotEmpty) {
-            _twoTss = datas[twoIndex].tss?.sublist(0, endNum + 1);
+          int maxLen = datas[_startIndex].tss.length;
+          if(maxLen>_startNum) {
+            _oneTss = datas[_startIndex].tss?.sublist(_startNum);
           }
         }
       }
     }
-    var threeIndex = _startIndex + 2;
+    int twoIndex = _startIndex + 1;
+    if (twoIndex >= 0 && twoIndex < datas.length) {
+      if (screenDataLen * 2 - _startNum <= showDataLen) {
+        _twoTss = datas[twoIndex].tss;
+      } else {
+        int endNum = showDataLen - screenDataLen + _startNum;
+        if (endNum > 0) {
+          if (datas[twoIndex].tss != null && datas[twoIndex].tss.isNotEmpty) {
+            int maxLen = datas[twoIndex].tss.length;
+            endNum = NumberUtil.min(maxLen, endNum + 1);
+            _twoTss = datas[twoIndex].tss?.sublist(0, endNum);
+          }
+        }
+      }
+    }
+    int threeIndex = _startIndex + 2;
     if (threeIndex >= 0 && threeIndex < datas.length) {
       if (screenDataLen * 2 - _startNum < showDataLen) {
-        var endNum = showDataLen - screenDataLen * 2 + _startNum;
+        int endNum = showDataLen - screenDataLen * 2 + _startNum;
         if (endNum > 0) {
           if (datas[threeIndex].tss != null && datas[threeIndex].tss.isNotEmpty) {
-            _threeTss = datas[threeIndex].tss?.sublist(0, endNum + 1);
+            int maxLen = datas[threeIndex].tss.length;
+            endNum = NumberUtil.min(maxLen, endNum + 1);
+            _threeTss = datas[threeIndex].tss?.sublist(0, endNum);
           }
         }
       }
@@ -195,7 +204,18 @@ class ChartPainter extends CustomPainter {
   }
 
   //画背景
-  void drawBg(Canvas canvas, Size size) {}
+  void drawBg(Canvas canvas, Size size) {
+    final Rect rect = Rect.fromLTRB(
+      chartRect.left,
+      chartRect.top,
+      chartRect.right + rightWidth,
+      chartRect.bottom + dateHeight,
+    );
+    final paint = Paint()
+      ..color = Colors.white
+      ..style = PaintingStyle.fill;
+    canvas.drawRect(rect, paint);
+  }
 
   //画网格
   void drawGrid(Canvas canvas) {
