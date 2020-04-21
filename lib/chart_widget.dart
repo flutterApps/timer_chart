@@ -6,12 +6,14 @@ class ChartWidget extends StatefulWidget {
   final List<PeriodEntity> datas;
   final Function(int) onDrag;
   final int initIndex;
+  final int screenLen;
 
   ChartWidget({
     Key key,
     this.datas,
     this.onDrag,
-    this.initIndex,
+    this.initIndex = 0,
+    this.screenLen = 60,
   }) : super(key: key);
 
   @override
@@ -89,6 +91,7 @@ class ChartWidgetState extends State<ChartWidget> with TickerProviderStateMixin 
           datas: widget.datas,
           scrollX: _scrollX,
           initIndex: widget.initIndex,
+          screenLen: widget.screenLen,
         ),
       ),
     );

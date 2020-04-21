@@ -67,8 +67,8 @@ class HomePage extends StatelessWidget {
     int len = 16;
     int i = 0;
     int n = 0;
-    final datas = getDatas(16);
-    final showLen = datas.length > 16 ? datas.length : 16;
+    final datas = getDatas(len);
+    final showLen = datas.length > len ? datas.length : len;
 
     return Scaffold(
       appBar: AppBar(
@@ -83,8 +83,9 @@ class HomePage extends StatelessWidget {
               key: _key,
               datas: datas,
               showLen: showLen,
-              initIndex: datas.length - 1,
               showWidth: MediaQuery.of(context).size.width,
+              initIndex: datas.length - 1,
+              screenLen: 60,
             ),
           ),
           Wrap(
