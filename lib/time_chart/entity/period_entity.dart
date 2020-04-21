@@ -1,6 +1,7 @@
 import 'ts_entity.dart';
 
 class PeriodEntity {
+  int type;
   int openTime;
   int closeTime;
   List<TsEntity> tss = [];

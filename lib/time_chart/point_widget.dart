@@ -20,6 +20,8 @@ class LinePoint extends StatefulWidget {
 }
 
 class LinePointState extends State<LinePoint> {
+  final Color primaryColor = Color(0xFF00A2AE);
+  final Color antiColor = Color(0xFFFF5918);
   final int _size = 15;
   ScrollController _controller;
   double _width;
@@ -51,8 +53,8 @@ class LinePointState extends State<LinePoint> {
     return ListView(
       controller: _controller,
       scrollDirection: Axis.horizontal,
-      children: _options.map((v) {
-        final index = _options.indexOf(v);
+      children: widget.datas.map((v) {
+        final index = widget.datas.indexOf(v);
         return InkWell(
           child: Container(
             width: _width,
@@ -62,15 +64,15 @@ class LinePointState extends State<LinePoint> {
               border: Border(
                 bottom: BorderSide(
                   width: 2,
-                  color: _index == index ? CssCfg.primaryColor : Colors.white,
+                  color: _index == index ? primaryColor : Colors.white,
                 ),
               ),
             ),
-            child: _iconView(v.optionType),
+            child: _iconView(v.type),
           ),
           onTap: () {
             if (_index != index) {
-              widget.onTap(v);
+              widget.onTap(index);
               if (mounted) {
                 setState(() {
                   _index = index;
@@ -85,10 +87,10 @@ class LinePointState extends State<LinePoint> {
 
   Widget _iconView(int type) {
     if (type == 0) {
-      return ClipOval(child: Container(color: CssCfg.antiColor));
+      return ClipOval(child: Container(color: antiColor));
     }
     if (type == 1) {
-      return ClipOval(child: Container(color: CssCfg.primaryColor));
+      return ClipOval(child: Container(color: primaryColor));
     }
     if (type == 2) {
       return ClipOval(child: Container(color: Colors.grey));
