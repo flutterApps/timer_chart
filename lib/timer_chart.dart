@@ -9,6 +9,7 @@ class TimerChart extends StatefulWidget {
   final int initIndex;
   final int showLen;
   final int screenLen;
+  final Function(int) onChange;
 
   TimerChart({
     Key key,
@@ -17,6 +18,7 @@ class TimerChart extends StatefulWidget {
     this.showWidth,
     this.initIndex,
     this.screenLen,
+    this.onChange,
   }) : super(key: key);
 
   @override
@@ -43,6 +45,9 @@ class TimerChartState extends State<TimerChart> {
             screenLen: widget.screenLen,
             onDrag: (int index) {
               _pointKey.currentState.onSelect(index);
+              if (widget.onChange != null) {
+                widget.onChange(index);
+              }
             },
           ),
         ),
@@ -53,6 +58,9 @@ class TimerChartState extends State<TimerChart> {
           showWidth: showWidth,
           onTap: (int index) {
             _chartKey.currentState.onSelect(index);
+            if (widget.onChange != null) {
+              widget.onChange(index);
+            }
           },
         ),
       ],
