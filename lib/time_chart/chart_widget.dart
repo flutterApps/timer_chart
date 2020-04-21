@@ -51,9 +51,11 @@ class ChartWidgetState extends State<ChartWidget> with TickerProviderStateMixin 
         print('------onHorizontalDragDown------details:${details.toString()}------');
       },
       onHorizontalDragUpdate: (details) {
-        setState(() {
-          _scrollX = (details.primaryDelta + _scrollX);
-        });
+        if (mounted) {
+          setState(() {
+            _scrollX = (details.primaryDelta + _scrollX);
+          });
+        }
 
         print('-----onHorizontalDragUpdate : ${details.primaryDelta} : $_scrollX');
       },
@@ -190,5 +192,9 @@ class ChartWidgetState extends State<ChartWidget> with TickerProviderStateMixin 
     _controller.forward();
   }
 
-  void _notifyChanged() => setState(() {});
+  void _notifyChanged() {
+    if (mounted) {
+      setState(() {});
+    }
+  }
 }

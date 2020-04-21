@@ -1,7 +1,6 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
-import 'package:flutterapp/timer_chart.dart';
-import 'time_chart/chart_widget.dart';
+import 'timer_chart.dart';
 import 'time_chart/entity/ts_entity.dart';
 import 'time_chart/entity/period_entity.dart';
 
@@ -79,7 +78,7 @@ class HomePage extends StatelessWidget {
         children: <Widget>[
           Container(
             height: 300,
-            padding: EdgeInsets.only(top:10),
+            padding: EdgeInsets.only(top: 10),
             child: TimerChart(
               key: _key,
               datas: datas,
@@ -111,13 +110,13 @@ class HomePage extends StatelessWidget {
                   if (datas.last.tss == null) {
                     datas.last.tss = <TsEntity>[
                       TsEntity(
-                        time: 1586427900 + (len + i-1) * 60 + n,
+                        time: 1586427900 + (len + i - 1) * 60 + n,
                         value: (randomDouble(4) - 500).abs(),
                       )
                     ];
                   } else {
                     datas.last.tss.add(TsEntity(
-                      time: 1586427900 + (len + i-1) * 60 + n,
+                      time: 1586427900 + (len + i - 1) * 60 + n,
                       value: (randomDouble(4) - 500).abs(),
                     ));
                   }

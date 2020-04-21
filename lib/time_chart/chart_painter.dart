@@ -139,7 +139,7 @@ class ChartPainter extends CustomPainter {
       if (_startNum >= 0) {
         if (datas[_startIndex].tss != null && datas[_startIndex].tss.isNotEmpty) {
           int maxLen = datas[_startIndex].tss.length;
-          if(maxLen>_startNum) {
+          if (maxLen > _startNum) {
             _oneTss = datas[_startIndex].tss?.sublist(_startNum);
           }
         }
@@ -176,7 +176,7 @@ class ChartPainter extends CustomPainter {
   }
 
   void calculateValue() {
-    var maxValue = 0.0;
+    double maxValue = 0.0;
     var minValue = 0.0;
     var tss = <TsEntity>[];
     if (_oneTss != null) tss.addAll(_oneTss);
@@ -193,14 +193,20 @@ class ChartPainter extends CustomPainter {
     if (tss.length > 0) {
       _lastTime = tss.last.time;
     }
-    var _gridValue = (maxValue - minValue) / gridRows / 2;
-    _maxValue = maxValue + _gridValue;
-    _minValue = minValue - _gridValue;
-    if (_maxValue == _minValue) {
-      _maxValue *= 1.5;
-      _minValue /= 2;
+    double gridValue = (maxValue - minValue) / gridRows / 2;
+    maxValue = maxValue + gridValue;
+    minValue = minValue - gridValue;
+    if (maxValue == minValue) {
+      maxValue *= 1.5;
+      minValue /= 2;
     }
-    _scaleY = chartRect.height / (_maxValue - _minValue);
+    if (maxValue - minValue == 0) {
+      _scaleY = 0;
+    } else {
+      _scaleY = chartRect.height / (maxValue - minValue);
+    }
+    _maxValue = maxValue;
+    _minValue = minValue;
   }
 
   //画背景

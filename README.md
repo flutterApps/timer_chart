@@ -1,6 +1,6 @@
-# Timer Chart
+# timerchart
 
-A new Flutter application.
+Countdown line chart
 
 ## Getting Started
 
