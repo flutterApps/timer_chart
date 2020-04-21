@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'entity/period_entity.dart';
 import 'chart_painter.dart';
-import 'entity/ts_entity.dart';
+import 'entity/period_entity.dart';
 
 class ChartWidget extends StatefulWidget {
   final List<PeriodEntity> datas;
@@ -56,7 +55,6 @@ class ChartWidgetState extends State<ChartWidget> with TickerProviderStateMixin 
             _scrollX = (details.primaryDelta + _scrollX);
           });
         }
-
         print('-----onHorizontalDragUpdate : ${details.primaryDelta} : $_scrollX');
       },
       onHorizontalDragEnd: (DragEndDetails details) {

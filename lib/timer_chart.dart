@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'time_chart/point_widget.dart';
-import 'time_chart/chart_widget.dart';
-import 'time_chart/entity/period_entity.dart';
+import 'entity/period_entity.dart';
+import 'point_widget.dart';
+import 'chart_widget.dart';
 
 class TimerChart extends StatefulWidget {
   final List<PeriodEntity> datas;

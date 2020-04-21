@@ -1,8 +1,8 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'entity/ts_entity.dart';
+import 'entity/period_entity.dart';
 import 'timer_chart.dart';
-import 'time_chart/entity/ts_entity.dart';
-import 'time_chart/entity/period_entity.dart';
 
 void main() => runApp(MyApp());
 

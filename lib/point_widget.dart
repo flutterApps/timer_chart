@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-
 import 'entity/period_entity.dart';
 
 class PointWidget extends StatefulWidget {
