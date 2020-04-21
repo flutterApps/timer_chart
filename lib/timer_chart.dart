@@ -27,6 +27,10 @@ class TimerChartState extends State<TimerChart> {
 
   @override
   Widget build(BuildContext context) {
+    double showWidth = widget.showWidth;
+    if (showWidth == null) {
+      showWidth = MediaQuery.of(context).size.width;
+    }
     return Column(
       children: <Widget>[
         Expanded(
@@ -43,7 +47,7 @@ class TimerChartState extends State<TimerChart> {
           key: _pointKey,
           datas: widget.datas,
           showLen: widget.showLen,
-          showWidth: widget.showWidth,
+          showWidth: showWidth,
           onTap: (int index) {
             _chartKey.currentState.onSelect(index);
           },
