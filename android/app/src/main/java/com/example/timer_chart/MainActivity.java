@@ -1,4 +1,4 @@
-package com.example.timerchart;
+package com.example.timer_chart;
 
 import androidx.annotation.NonNull;
 import io.flutter.embedding.android.FlutterActivity;

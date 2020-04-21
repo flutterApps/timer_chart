@@ -1,4 +1,4 @@
-# timerchart
+# timer_chart
 
 Countdown line chart
 
