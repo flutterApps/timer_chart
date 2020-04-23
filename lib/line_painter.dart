@@ -18,7 +18,6 @@ class LinePainter extends CustomPainter {
   final int gridRows = 2;
   final int gridColumns = 0;
   final double fontSize = 12.0;
-  final Color textColor = Color(0xFF000000);
   final Color primaryColor = Color(0xFF00A2AE);
   final Color antiColor = Color(0xFFFF5918);
   final List<String> dateFormats = [HH, ':', nn];
@@ -89,7 +88,7 @@ class LinePainter extends CustomPainter {
   void drawGrid(Canvas canvas) {
     Paint gridPaint = Paint()
       ..strokeWidth = 0.5
-      ..color = Color(0xFF999999)
+      ..color = Color(0xFFAAAAAA)
       ..isAntiAlias = true
       ..filterQuality = FilterQuality.high;
     double rowSpace = _chartRect.height / gridRows;
@@ -121,7 +120,7 @@ class LinePainter extends CustomPainter {
         text: TextSpan(
           text: (_maxValue - gridVal * i).toStringAsFixed(4),
           style: TextStyle(
-            color: textColor,
+            color: Color(0xFF666666),
             fontSize: fontSize,
           ),
         ),
