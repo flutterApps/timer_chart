@@ -8,14 +8,12 @@ class LineWidget extends StatefulWidget {
   final List<TsEntity> datas;
   final int screenLen;
   final double leftWidth;
-  final double dateHeight;
 
   LineWidget({
     Key key,
     this.datas,
     this.screenLen = 60,
     this.leftWidth = 60,
-    this.dateHeight = 30,
   }) : super(key: key);
 
   @override
