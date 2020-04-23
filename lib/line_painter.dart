@@ -31,7 +31,7 @@ class LinePainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    pointWidth = (size.width - leftWidth) / (screenLen-1);
+    pointWidth = (size.width - leftWidth) / (screenLen - 1);
     _chartRect = Rect.fromLTRB(leftWidth, 0, size.width, size.height);
     calculateValue();
 
@@ -104,8 +104,8 @@ class LinePainter extends CustomPainter {
       double columnSpace = _chartRect.width / gridColumns;
       for (int i = 0; i <= columnSpace; i++) {
         canvas.drawLine(
-          Offset(columnSpace * i+leftWidth, 0),
-          Offset(columnSpace * i+leftWidth, _chartRect.bottom),
+          Offset(columnSpace * i + leftWidth, 0),
+          Offset(columnSpace * i + leftWidth, _chartRect.bottom),
           gridPaint,
         );
       }
@@ -126,16 +126,9 @@ class LinePainter extends CustomPainter {
           ),
         ),
         textDirection: TextDirection.ltr,
-        textAlign: TextAlign.right,
+        textAlign: TextAlign.left,
       );
-      var valueDy = _chartRect.top + _chartRect.height / gridRows * i;
-      if (i == gridRows) {
-        valueDy -= fontSize * 1.2;
-      } else if (i > 0) {
-        valueDy -= fontSize * 0.5;
-      } else if (i == 0) {
-        valueDy += fontSize * 0.2;
-      }
+      var valueDy = _chartRect.top + _chartRect.height / gridRows * i - fontSize * 0.5;
       painter.layout(minWidth: leftWidth, maxWidth: leftWidth);
       painter.paint(canvas, Offset(0, valueDy));
     }
@@ -192,8 +185,6 @@ class LinePainter extends CustomPainter {
     canvas.drawPath(fillPath, fillPaint);
     canvas.drawPath(path, paint);
   }
-
-
 
   @override
   bool shouldRepaint(LinePainter oldDelegate) {

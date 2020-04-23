@@ -91,8 +91,14 @@ class LineWidgetState extends State<LineWidget> with TickerProviderStateMixin {
                 child: Wrap(
                   direction: Axis.vertical,
                   children: <Widget>[
-                    Text('Price: ${_ts.value}'),
-                    Text('Time: ${_formatTime(_ts.time)}'),
+                    Text(
+                      'Price: ${_ts.value}',
+                      style: TextStyle(fontSize: 12),
+                    ),
+                    Text(
+                      'Time: ${_formatTime(_ts.time)}',
+                      style: TextStyle(fontSize: 12),
+                    ),
                   ],
                 ),
               ),
